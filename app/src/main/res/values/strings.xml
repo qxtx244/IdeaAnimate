@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">test</string>
+    <string name="str1">test1</string>
+
+    <plurals name="testStr">
+        <item quantity="one">%s Num</item>
+        <item quantity="other">%s Nums</item>
+
+    </plurals>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
