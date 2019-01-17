@@ -1,20 +1,13 @@
 package com.qxtx.test;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Path;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.widget.ImageView;
-
-import com.qxtx.test.animate.Constant;
 import com.qxtx.test.animate.IdeaAnimator;
-import com.qxtx.test.animate.IdeaAnimatorManager;
-
 import java.util.concurrent.ScheduledExecutorService;
 
 
@@ -35,12 +28,18 @@ public class MainActivity extends Activity {
         ImageView img = (ImageView)findViewById(R.id.image);
 
         Path path = setPath();
-        idea = new IdeaAnimator("test", img)
+        idea = new IdeaAnimator(btn, "test")
                 .setDuration(2000)
-                .setPropertyName("alpha")
-                .setFloatValues(0f, 1f)
-                .setRepeat(Constant.REPEAT_INFINITE, Constant.REPEAT_REVERSE);
+                .setPath(path);
         idea.start();
+
+//        AnimationDrawable drawable = new AnimationDrawable();
+//        drawable.addFrame(getResources().getDrawable(R.mipmap.alias), 100);
+//        drawable.addFrame(getResources().getDrawable(R.mipmap.alias2), 100);
+//        drawable.addFrame(getResources().getDrawable(R.mipmap.gohome), 100);
+//        drawable.addFrame(getResources().getDrawable(R.mipmap.ic_launcher), 100);
+//        img.setImageDrawable(drawable);
+//        ((AnimationDrawable)img.getDrawable()).start();
 
         ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(btn, "x", "y", path);
     }
