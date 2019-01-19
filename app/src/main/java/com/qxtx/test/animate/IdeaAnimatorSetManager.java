@@ -30,6 +30,20 @@ public class IdeaAnimatorSetManager implements IManager<IdeaAnimatorSet> {
         return manager;
     }
 
+    public static IdeaAnimatorSet together(IdeaAnimator... ideas) {
+        return baseSet().playTogether(ideas);
+    }
+
+    public static IdeaAnimatorSet sequentially(IdeaAnimator... ideas) {
+        return baseSet().playSequentially(ideas);
+    }
+
+    private static IdeaAnimatorSet baseSet() {
+        IdeaAnimatorSet ideaSet = new IdeaAnimatorSet();
+        IdeaAnimatorSetManager.getInstance().setList.add(ideaSet);
+        return ideaSet;
+    }
+
     @Override
     public void add(IdeaAnimatorSet animator) {
         setList.add(animator);
@@ -66,13 +80,14 @@ public class IdeaAnimatorSetManager implements IManager<IdeaAnimatorSet> {
     }
 
     @Override
-    public IdeaAnimatorSet get(@NonNull String tag) {
+    public List<IdeaAnimatorSet> get(@NonNull String tag) {
+        List<IdeaAnimatorSet> ideaSets = new ArrayList<>();
         for (IdeaAnimatorSet ideaSet : setList) {
             if(ideaSet.getTag().equals(tag)) {
-                return ideaSet;
+                ideaSets.add(ideaSet);
             }
         }
-        return null;
+        return ideaSets;
     }
 
     @Override

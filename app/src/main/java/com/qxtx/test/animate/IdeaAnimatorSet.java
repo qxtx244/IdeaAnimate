@@ -3,7 +3,11 @@ package com.qxtx.test.animate;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
+import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
+import android.view.animation.Interpolator;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -16,19 +20,32 @@ import java.util.List;
 public class IdeaAnimatorSet {
     private static final String TAG = "IdeaAnimatorSet";
     private final String tag;
+    private final Object target;
     private final AnimatorSet set;
 
     public IdeaAnimatorSet() {
-        this(null);
+        this(null, null);
     }
 
     public IdeaAnimatorSet(@Nullable AnimatorSet set) {
         this(set, null);
     }
 
+    public IdeaAnimatorSet(@NonNull Object target) {
+        this(target, null);
+    }
+
+    public IdeaAnimatorSet(@NonNull Object target,  String tag) {
+        this.set = new AnimatorSet();
+        this.tag = tag == null ? IdeaAnimatorSetManager.getInstance().getCount() + "" : tag;
+        this.target = target;
+        this.set.setTarget(target);
+    }
+
     public IdeaAnimatorSet(@Nullable AnimatorSet set, String tag) {
         this.set = set == null ? new AnimatorSet() : set;
         this.tag = tag == null ? IdeaAnimatorSetManager.getInstance().getCount() + "" : tag;
+        this.target = null;
     }
 
     public String getTag() {
@@ -47,25 +64,49 @@ public class IdeaAnimatorSet {
 
     /**
      * Start animators in the same time.
-     * @param delay Delay time of start
      * @param animations Arrays of animator
      */
-    public void startTogether(long delay, IdeaAnimator... animations) {
+    public IdeaAnimatorSet playTogether(IdeaAnimator... animations) {
         ValueAnimator[] animatorArray = convertType(animations);
         set.playTogether(animatorArray);
-        set.setStartDelay(delay);
-        set.start();
+        return this;
     }
 
     /**
      * Start animators sequentially.
-     * @param delay Delay time of start
      * @param animations Arrays of animator
      */
-    public void startSequentially(long delay, IdeaAnimator... animations) {
+    public IdeaAnimatorSet playSequentially(IdeaAnimator... animations) {
         ValueAnimator[] animatorArray = convertType(animations);
         set.playSequentially(animatorArray);
+        return this;
+    }
+
+    public IdeaAnimatorSet setCurrentPlayTime(long playTime) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            set.setCurrentPlayTime(playTime);
+        } else {
+            Log.e(TAG, "AnimatorSet.setCurrentPlayTime(long) didn't work in sdk version number below 26.");
+        }
+        return this;
+    }
+
+    public IdeaAnimatorSet setDuration(long duration) {
+        set.setDuration(duration);
+        return this;
+    }
+
+    public IdeaAnimatorSet setInterpolator(Interpolator interpolator) {
+        set.setInterpolator(interpolator);
+        return this;
+    }
+
+    public IdeaAnimatorSet setStartDelay(long delay) {
         set.setStartDelay(delay);
+        return this;
+    }
+
+    public void start() {
         set.start();
     }
 

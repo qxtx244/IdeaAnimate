@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
  * @CreateDate 2019/01/16 14:04.
  * @Author QXTX-GOSPELL
  */
-public class Constant {
+public class IdeaUtil {
     @IntDef({HORIZONTAL, VERTICAL})
     @interface Orientation {
     }
@@ -34,4 +34,7 @@ public class Constant {
     public static final String TYPE_SCALE = "Scale";
     public static final String CUSTOM_3D_ROTATE = "3dRotate";
     public static final String CUSTOM_CIRCUAL_REVERAL = "CircularReveral";
+
+    public static final int LEVEL_MIN = 1;
+    public static final int LEVEL_MAX = 10;
 }

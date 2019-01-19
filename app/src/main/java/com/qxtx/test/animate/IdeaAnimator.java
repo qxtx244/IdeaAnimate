@@ -18,6 +18,7 @@ import android.util.Property;
 
 import junit.framework.Assert;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 
 /** Solution method of animator. **/
@@ -25,6 +26,8 @@ public final class IdeaAnimator {
     private final String TAG = "IdeaAnimator";
     private final String tag;
     private final ValueAnimator animator;
+    final WeakReference<Object> target;
+    private boolean allowStart;
 
     public IdeaAnimator() {
         this(null, null);
@@ -41,6 +44,8 @@ public final class IdeaAnimator {
     public IdeaAnimator(@Nullable Object target, @Nullable String tag) {
         IdeaAnimatorManager manager = IdeaAnimatorManager.getInstance();
         this.tag = tag == null ? manager.getCount() + "" : tag;
+        this.target = new WeakReference<Object>(target);
+        allowStart = true;
 
         if (target == null) {
             animator = new ValueAnimator();
@@ -138,6 +143,10 @@ public final class IdeaAnimator {
         animator.removeUpdateListener(listener);
     }
 
+    public void setAllowStart(boolean allowStart) {
+        this.allowStart = allowStart;
+    }
+
     /**
      * Set a Path for animator. It is best not call together with any of {@link #setIntValues}, {@link #setFloatValues}
      *  or {@link #setObjectValues}, or make conflict. You only need to call this and {@link #setDuration(long)}
@@ -196,7 +205,7 @@ public final class IdeaAnimator {
     /**
      * It will be auto set a {@link android.animation.FloatEvaluator},
      *   so you don't need to call {@link #setTypeEvaluator(TypeEvaluator)} if you don't want to set it.
-     *   It must be called if animator need values of type float.
+     *   It must be called if animator need values of type float. <b>Specially, It will auto set interpolator of {@link android.view.animation.AccelerateDecelerateInterpolator}</b>.
      *  @return  {@link IdeaAnimator} The object called with this
      **/
     public IdeaAnimator setFloatValues(@NonNull float... values) {
@@ -205,7 +214,7 @@ public final class IdeaAnimator {
     }
 
     /**
-     * Speed control for animator.
+     * Speed control for animator. Auto set {@link android.view.animation.AccelerateDecelerateInterpolator} if you not to call this.
      * @param interpolator  A timeInterpolator to make speed control for Animator
      * @return  {@link IdeaAnimator} The object called with this
      **/
@@ -217,7 +226,8 @@ public final class IdeaAnimator {
     /**
      * It will be auto set the {@link android.animation.IntEvaluator},
      *   so you don't need to call {@link #setTypeEvaluator(TypeEvaluator)} if you don't want to set it.
-     *   It must be called if animator need values of type int.
+     *   It must be called if animator need values of type int. <b>Specially, It will auto set interpolator
+     *   of {@link android.view.animation.AccelerateDecelerateInterpolator}</b>.
      * @param values A value array type of int
      * @return  {@link IdeaAnimator} The object called with this
      **/
@@ -259,10 +269,10 @@ public final class IdeaAnimator {
      * Set animator repeat with a repeat mode.
      * The times of animator execute is count+1
      * @param count Times of animator repeat
-     * @param mode The mode of animator repeat. see {@link Constant.RepeatMode}
+     * @param mode The mode of animator repeat. see {@link IdeaUtil.RepeatMode}
      * @return  {@link IdeaAnimator} The object called with this
      **/
-    public IdeaAnimator setRepeat(int count, @Constant.RepeatMode int mode) {
+    public IdeaAnimator setRepeat(int count, @IdeaUtil.RepeatMode int mode) {
         animator.setRepeatCount(count);
         animator.setRepeatMode(mode);
         return this;
@@ -330,7 +340,9 @@ public final class IdeaAnimator {
     }
 
     public void start() {
-        animator.start();
+        if (allowStart) {
+            animator.start();
+        }
     }
 
     public void startDelay(long delay) {
@@ -340,6 +352,10 @@ public final class IdeaAnimator {
 
     public long getStartDelay() {
         return animator.getStartDelay();
+    }
+
+    public boolean isAllowStart() {
+        return allowStart;
     }
 
     public boolean isPause() {

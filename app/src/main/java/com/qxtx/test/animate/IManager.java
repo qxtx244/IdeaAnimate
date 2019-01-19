@@ -22,7 +22,7 @@ public interface IManager<T> {
 
     List<T> getAnimateList();
 
-    T get(@NonNull String tag);
+    List<T> get(@NonNull String tag);
 
     void release();
 }

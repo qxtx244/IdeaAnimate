@@ -67,17 +67,15 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         return animationList;
     }
 
-    /**
-     * ！！！总是返回第一个匹配tag的animate，因此存在多个相同的tag的时候，可能会无法得到想要的结果。
-     */
     @Override
-    public IdeaAnimation get(@NonNull String tag) {
+    public List<IdeaAnimation> get(@NonNull String tag) {
+        List<IdeaAnimation> ideas = new ArrayList<>();
         for (IdeaAnimation idea : animationList) {
             if (idea.getTag().equals(tag)) {
-                return idea;
+                ideas.add(idea);
             }
         }
-        return null;
+        return ideas;
     }
 
     @Override
