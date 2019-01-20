@@ -26,7 +26,6 @@ public final class IdeaAnimator {
     private final String TAG = "IdeaAnimator";
     private final String tag;
     private final ValueAnimator animator;
-    final WeakReference<Object> target;
     private boolean allowStart;
 
     public IdeaAnimator() {
@@ -44,7 +43,6 @@ public final class IdeaAnimator {
     public IdeaAnimator(@Nullable Object target, @Nullable String tag) {
         IdeaAnimatorManager manager = IdeaAnimatorManager.getInstance();
         this.tag = tag == null ? manager.getCount() + "" : tag;
-        this.target = new WeakReference<Object>(target);
         allowStart = true;
 
         if (target == null) {
@@ -90,6 +88,10 @@ public final class IdeaAnimator {
     public IdeaAnimator addUpdateListener(ValueAnimator.AnimatorUpdateListener listener) {
         animator.addUpdateListener(listener);
         return this;
+    }
+
+    public long getStartDelay() {
+        return animator.getStartDelay();
     }
 
     /**
@@ -253,6 +255,20 @@ public final class IdeaAnimator {
     }
 
     /**
+     * Set property for animator. It was only set for {@link ObjectAnimator}.
+     * @param property the property of target
+     * @return {@link IdeaAnimator} The object call with this
+     */
+    public IdeaAnimator setProperty(Property property) {
+        if (animator instanceof ObjectAnimator) {
+            ((ObjectAnimator)animator).setProperty(property);
+        } else {
+            Log.e(TAG, "Invalid call. It was only set for ObjectAnimator.");
+        }
+        return this;
+    }
+
+    /**
      * Set a propertyValuesHolder. It is best not set {@link #setIntValues}, {@link #setFloatValues} or {@link #setObjectValues}
      *  and it together, or make conflict. You only need to call this and {@link #setDuration} to make a simply animator.
      * @deprecated It can be instead of {@link #setPath} and it can use with more simply.
@@ -263,6 +279,37 @@ public final class IdeaAnimator {
     public IdeaAnimator setPropertyValuesHolder(PropertyValuesHolder... holders) {
         animator.setValues(holders);
         return this;
+    }
+
+    /**
+     * Set property for animator that search by name. It was only set for ObjectAnimator. If it was not found
+     *  from target, it will be use {@link PropertyFactory} to make a custom property instance of it.
+     *  You can take target with a {@link PropertyFactory} to customize your animator to create more possible.
+     *  If propertyName is NULL but target is instance of {@link PropertyFactory}, property will be
+     *  {@link PropertyFactory#PROPERTY_CUSTOM} instead of NULL, and not change otherwise. You should be ensure
+     *  the setter of property was exist in your propertyFactory object while the property is not
+     *  {@link PropertyFactory#PROPERTY_CUSTOM}.
+     * @param propertyName the property name of target
+     * @return {@link IdeaAnimator} The object call with this
+     */
+    public IdeaAnimator setPropertyName(String propertyName) {
+        if (animator instanceof ObjectAnimator) {
+            ObjectAnimator objectAnimator = (ObjectAnimator) animator;
+            Object target = objectAnimator.getTarget();
+            Object newTarget = shouldBeUsePropertyFactory(target, propertyName);
+            objectAnimator.setTarget(newTarget);
+
+            String instanceProperty = ((newTarget instanceof PropertyFactory) && (propertyName == null))
+                    ? PropertyFactory.PROPERTY_CUSTOM : propertyName;
+            objectAnimator.setPropertyName(instanceProperty);
+        } else {
+            Log.e(TAG, "Invalid call. It was only set for ObjectAnimator.");
+        }
+        return this;
+    }
+
+    public IdeaAnimator setRepeat(int repeatCount) {
+        return setRepeat(repeatCount, IdeaUtil.MODE_RESTART);
     }
 
     /**
@@ -298,45 +345,12 @@ public final class IdeaAnimator {
         return this;
     }
 
-    /**
-     * Set property for animator. It was only set for {@link ObjectAnimator}.
-     * @param property the property of target
-     * @return {@link IdeaAnimator} The object call with this
-     */
-    public IdeaAnimator setProperty(Property property) {
-        if (animator instanceof ObjectAnimator) {
-            ((ObjectAnimator)animator).setProperty(property);
-        } else {
-            Log.e(TAG, "Invalid call. It was only set for ObjectAnimator.");
-        }
-        return this;
+    public void setupEndValues() {
+        animator.setupEndValues();
     }
 
-    /**
-     * Set property for animator that search by name. It was only set for ObjectAnimator. If it was not found
-     *  from target, it will be use {@link PropertyFactory} to make a custom property instance of it.
-     *  You can take target with a {@link PropertyFactory} to customize your animator to create more possible.
-     *  If propertyName is NULL but target is instance of {@link PropertyFactory}, property will be
-     *  {@link PropertyFactory#PROPERTY_CUSTOM} instead of NULL, and not change otherwise. You should be ensure
-     *  the setter of property was exist in your propertyFactory object while the property is not
-     *  {@link PropertyFactory#PROPERTY_CUSTOM}.
-     * @param propertyName the property name of target
-     * @return {@link IdeaAnimator} The object call with this
-     */
-    public IdeaAnimator setPropertyName(String propertyName) {
-        if (animator instanceof ObjectAnimator) {
-            ObjectAnimator objectAnimator = (ObjectAnimator) animator;
-            Object target = objectAnimator.getTarget();
-            Object newTarget = shouldBeUsePropertyFactory(target, propertyName);
-            objectAnimator.setTarget(newTarget);
-
-            String instanceProperty = ((newTarget instanceof PropertyFactory) && (propertyName == null))
-                    ? PropertyFactory.PROPERTY_CUSTOM : propertyName;
-            objectAnimator.setPropertyName(instanceProperty);
-        } else {
-            Log.e(TAG, "Invalid call. It was only set for ObjectAnimator.");
-        }
-        return this;
+    public void setupStartValues() {
+        animator.setupStartValues();
     }
 
     public void start() {
@@ -348,10 +362,6 @@ public final class IdeaAnimator {
     public void startDelay(long delay) {
         animator.setStartDelay(delay);
         animator.start();
-    }
-
-    public long getStartDelay() {
-        return animator.getStartDelay();
     }
 
     public boolean isAllowStart() {

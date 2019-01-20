@@ -1,26 +1,23 @@
 package com.qxtx.test.animate;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
-import android.content.Context;
+import android.animation.ArgbEvaluator;
+import android.graphics.Color;
 import android.graphics.Path;
-import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
+import android.widget.TextView;
 
 import junit.framework.Assert;
-
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
+    private static final long DEFAULT_DURATION = 500;
     private static final String TAG = "IdeaAnimatorManager";
     private static IdeaAnimatorManager manager;
     private List<IdeaAnimator> animatorList;
@@ -90,24 +87,9 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
         return ideas;
     }
 
-    public List<IdeaAnimator> get(@NonNull Object target) {
-        List<IdeaAnimator> ideas = new ArrayList<>();
-        try {
-            for (int i = 0; i < animatorList.size(); i++) {
-                IdeaAnimator idea = animatorList.get(i);
-                if (idea.target.get() == target) {
-                    ideas.add(idea);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ideas;
-    }
-
-    public static IdeaAnimator animatorPath(@NonNull Object target, Path path, long duration) {
+    public static IdeaAnimator animatorPath(@NonNull Object target, Path path) {
         checkIsView(target);
-        return baseIdea(target, duration).setPath(path);
+        return baseIdea(target, DEFAULT_DURATION).setPath(path);
     }
 
     public static IdeaAnimator animatorLinearPath(@NonNull Object target,
@@ -120,10 +102,93 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
         return baseIdea(target, duration).setPath(path);
     }
 
+    public static IdeaAnimator alpha(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "alpha", values);
+    }
+
+    public static IdeaAnimator alphaShow(@NonNull Object target) {
+        float startAlpha = target instanceof View ? ((View)target).getAlpha() : 1f;
+        IdeaAnimator idea = alpha(target, startAlpha, 1f);
+        idea.setAllowStart(startAlpha != 1f);
+        return idea;
+    }
+
+    public static IdeaAnimator alphaHide(@NonNull Object target) {
+        float startAlpha = target instanceof View ? ((View) target).getAlpha() : 0f;
+        IdeaAnimator idea = alpha(target, startAlpha, 0f);
+        idea.setAllowStart(startAlpha != 0f);
+        return idea;
+    }
+
+    public static IdeaAnimator bgColorfully(@NonNull final Object target, @NonNull String... colorString) {
+        checkIsView(target);
+        Object instanceTarget = target;
+        boolean isFactory = target instanceof PropertyFactory;
+        if (!isFactory) {
+            instanceTarget = new PropertyFactory<String>(target) {
+                @Override
+                public void setCustom(String value) {
+                    ((View)target).setBackgroundColor(Color.parseColor(value));
+                }
+            };
+        }
+
+        return baseIdea(instanceTarget, DEFAULT_DURATION * 10)
+                .setPropertyName(PropertyFactory.PROPERTY_CUSTOM)
+                .setObjectValues(new ArgbTypeEvaluator(), colorString);
+    }
+
+    public static IdeaAnimator bgColorfully(@NonNull Object target, @NonNull int... colorValues) {
+        return baseIdea(target, DEFAULT_DURATION * 10)
+                .setPropertyName("backgroundColor")
+                .setIntValues(colorValues)
+                .setTypeEvaluator(new ArgbEvaluator())
+                .setInterpolator(new LinearInterpolator());
+    }
+
+    public static IdeaAnimatorSet bounce(@NonNull Object target, float high) {
+        return bounce(target, high, IdeaUtil.VERTICAL);
+    }
+
+    public static IdeaAnimatorSet bounce(@NonNull Object target, float high, @IdeaUtil.Orientation int orientation) {
+        long duration = 1000;
+        high = high < 0f ? 0f : high;
+        String propertyName = orientation == IdeaUtil.HORIZONTAL ? "translationY" : "translationY";
+        return IdeaAnimatorSetManager.sequentially(
+                floatIdea(target, duration / 12, propertyName, 0f, -high)
+                        .setInterpolator(new DecelerateInterpolator()),
+                floatIdea(target, duration / 4, propertyName, -high, 0f)
+                        .setInterpolator(new BounceInterpolator()));
+    }
+
+    public static IdeaAnimator breathe(@NonNull Object target) {
+        checkIsView(target);
+        float startAlpha = ((View) target).getAlpha();
+        float cAlpha = startAlpha == 1f ? 0f : 1f;
+        return baseIdea(target, 1000)
+                .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_REVERSE)
+                .setPropertyName("alpha")
+                .setFloatValues(startAlpha, cAlpha, startAlpha)
+                .setInterpolator(new LinearInterpolator());
+    }
+
+    public static IdeaAnimatorSet heartBeats(@NonNull Object target, int level) {
+        long duration = 800;
+        level = level > 10 ? 10 : level;
+        level = level <= 0 ? 1 : level;
+        float beatsLevel = (float)level * 0.2f;
+        return IdeaAnimatorSetManager.together(
+                floatIdea(target, duration, "scaleX", 1f, 1f, beatsLevel, 1f),
+                floatIdea(target, duration, "scaleY", 1f, 1f, beatsLevel, 1f))
+                .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_RESTART)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .setDuration(duration);
+    }
+
     /**
      * ！！！parse a math path of animator. It maybe simply to make a complex path of caller.
      * @param target The object of execute animator
-     * @param math The formula of path include variable "x" and result "y"
+     * @param math The formula of path just like "y = kx + b"
      * @return {@link IdeaAnimator} The Object which call this.
      */
     public static IdeaAnimator mathematicalPath(@NonNull Object target, String math) {
@@ -134,84 +199,69 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
         return idea;
     }
 
-    public static IdeaAnimator rotateCenter(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "rotation", values);
+    public static IdeaAnimator rotate(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "rotation", values);
     }
 
-    public static IdeaAnimator rotateX(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "rotationX", values);
+    public static IdeaAnimator rotateX(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "rotationX", values);
     }
 
-    public static IdeaAnimator rotateY(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "rotationY", values);
+    public static IdeaAnimator rotateY(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "rotationY", values);
     }
 
-    public static IdeaAnimator translationX(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "translationX", values);
-    }
-
-    public static IdeaAnimator translationY(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "translationY", values);
-    }
-
-    public static IdeaAnimatorSet scaleCenter(@NonNull Object target, long duration, float... values) {
+    public static IdeaAnimatorSet scale(@NonNull Object target, float... values) {
         return IdeaAnimatorSetManager.together(
-                floatIdea(target, duration, "scaleX", values),
-                floatIdea(target, duration, "scaleY", values));
+                floatIdea(target, DEFAULT_DURATION, "scaleX", values),
+                floatIdea(target, DEFAULT_DURATION, "scaleY", values));
     }
 
-    public static IdeaAnimator scaleX(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "scaleX", values);
+    public static IdeaAnimator scaleX(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "scaleX", values);
     }
 
-    public static IdeaAnimator scaleY(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "scaleY", values);
+    public static IdeaAnimator scaleY(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "scaleY", values);
     }
 
-    public static IdeaAnimator alpha(@NonNull Object target, long duration, float... values) {
-        return floatIdea(target, duration, "alpha", values);
-    }
-
-    public static IdeaAnimator alphaShow(@NonNull Object target, long duration) {
-        return floatIdea(target, duration, "alpha", 0f, 1f);
-    }
-
-    public static IdeaAnimator alphaHide(@NonNull Object target, long duration) {
-        float startAlpha = target instanceof View ? ((View) target).getAlpha() : 0f;
-        return floatIdea(target, duration, "alpha", startAlpha, 0f);
-    }
-
-    public static IdeaAnimator breath(@NonNull Object target, long duration, int repeat) {
-        checkIsView(target);
-        long time = duration < 1000 ? 1000 : duration;
-        float startAlpha = ((View) target).getAlpha();
-        int count = repeat < 0 ? IdeaUtil.INFINITE : repeat;
-        return baseIdea(target, time)
-                .setRepeat(count, IdeaUtil.MODE_REVERSE)
-                .setPropertyName("alpha")
-                .setFloatValues(startAlpha, 1f - startAlpha, startAlpha);
-    }
-
-    public static IdeaAnimator shake(@NonNull Object target, long duration, @IdeaUtil.Orientation int orientation, int level) {
+    public static IdeaAnimator shake(@NonNull Object target, @IdeaUtil.Orientation int orientation, int level) {
         checkIsView(target);
         boolean isHor = orientation == IdeaUtil.HORIZONTAL;
         float shakeValue = (level > 10 ? 10f : (float)level) * 10f;
         String propertyName = isHor ? "translationX" : "transLationY";
-        float[] values = new float[] {0f, shakeValue, -shakeValue,
-                shakeValue, -shakeValue, shakeValue, -shakeValue, 0f};
+        float[] values = new float[] {0f, shakeValue, -shakeValue, shakeValue, -shakeValue, 0f};
 
-        return baseIdea(target, duration)
+        return baseIdea(target, 200)
                 .setPropertyName(propertyName)
                 .setFloatValues(values)
                 .setInterpolator(new LinearInterpolator());
     }
 
-    public static IdeaAnimatorSet heartBeats(@NonNull Object target, long duration, int level) {
-        long dur = duration < 500 ? 500 : duration;
-        level = level > 10 ? 10 : level;
-        level = level <= 0 ? 1 : level;
-        float beatsLevel = (float)level * 0.2f;
-        return scaleCenter(target, dur, 1f, beatsLevel, 1f);
+    public static IdeaAnimator swinging(@NonNull Object target, float angle) {
+        return rotate(target, 300, 0f, angle, -angle, 0f)
+                .setRepeat(1, IdeaUtil.MODE_RESTART);
+    }
+
+    public static IdeaAnimator textColorfully(@NonNull TextView target, @NonNull String... colorString) {
+        checkIsView(target);
+        PropertyFactory<String> factory = new PropertyFactory<String>(target) {
+            @Override
+            public void setCustom(String value) {
+                target.setTextColor(Color.parseColor(value));
+            }
+        };
+        return baseIdea(factory, DEFAULT_DURATION * 10)
+                .setPropertyName(PropertyFactory.PROPERTY_CUSTOM)
+                .setObjectValues(new ArgbTypeEvaluator(), colorString);
+    }
+
+    public static IdeaAnimator translationX(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "translationX", values);
+    }
+
+    public static IdeaAnimator translationY(@NonNull Object target, float... values) {
+        return floatIdea(target, DEFAULT_DURATION, "translationY", values);
     }
 
     private static IdeaAnimator floatIdea(@NonNull Object target, long duration, @NonNull String property, float... values) {
@@ -220,9 +270,7 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
     }
 
     private static IdeaAnimator baseIdea(@NonNull Object target, long duration) {
-        IdeaAnimator idea = new IdeaAnimator(target).setDuration(duration);
-        IdeaAnimatorManager.getInstance().add(idea);
-        return idea;
+        return new IdeaAnimator(target).setDuration(duration);
     }
 
     private static void checkIsView(Object target) {

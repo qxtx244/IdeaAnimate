@@ -4,13 +4,19 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Path;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.view.View;
 import android.view.animation.LinearInterpolator;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
+
 import com.qxtx.test.animate.IdeaAnimator;
 import com.qxtx.test.animate.IdeaAnimatorManager;
+import com.qxtx.test.animate.IdeaAnimatorSet;
 import com.qxtx.test.animate.IdeaUtil;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,28 +28,28 @@ public class MainActivity extends Activity {
     private String TAG = "MainActivity";
     private ScheduledExecutorService executorService;
     private Intent intent, intent1;
-    private MyButton btn;
+    private Button btn;
     private IdeaAnimator idea;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btn = (MyButton)findViewById(R.id.send);
+        btn = (Button)findViewById(R.id.send);
         ImageView img = (ImageView)findViewById(R.id.image);
-
+        TextView text = (TextView)findViewById(R.id.text);
         Path path = setPath();
-//        idea = new IdeaAnimator(btn, "test")
-//                .setDuration(2000)
-//                .setPath(path);
-//        idea.start();
 
-        IdeaAnimator idea1 = IdeaAnimatorManager.shake(btn, 1000, IdeaUtil.HORIZONTAL, 2);
-        idea1.start();
-        new Handler().postDelayed(() -> {
-            IdeaAnimator idea2 = IdeaAnimatorManager.shake(btn, 1000, IdeaUtil.HORIZONTAL, 2);
-            idea2.start();
-        }, 2000);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IdeaAnimatorManager.textColorfully(text, "#00ff33", "#ff0088").start();
+            }
+        });
+//        new Handler().postDelayed(() -> {
+//            IdeaAnimator idea2 = IdeaAnimatorManager.shake(btn, 1000, IdeaUtil.HORIZONTAL, 2);
+//            idea2.start();
+//        }, 2000);
 
 //        AnimationDrawable drawable = new AnimationDrawable();
 //        drawable.addFrame(getResources().getDrawable(R.mipmap.alias), 100);

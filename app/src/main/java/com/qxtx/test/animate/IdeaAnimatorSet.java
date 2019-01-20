@@ -4,12 +4,19 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.MessageQueue;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,6 +29,8 @@ public class IdeaAnimatorSet {
     private final String tag;
     private final Object target;
     private final AnimatorSet set;
+    private int repeatCount;
+    private int repeatMode;
 
     public IdeaAnimatorSet() {
         this(null, null);
@@ -40,26 +49,49 @@ public class IdeaAnimatorSet {
         this.tag = tag == null ? IdeaAnimatorSetManager.getInstance().getCount() + "" : tag;
         this.target = target;
         this.set.setTarget(target);
+        this.repeatCount = -1;
+        this.repeatMode = -1;
+        IdeaAnimatorSetManager.getInstance().add(this);
     }
 
     public IdeaAnimatorSet(@Nullable AnimatorSet set, String tag) {
         this.set = set == null ? new AnimatorSet() : set;
         this.tag = tag == null ? IdeaAnimatorSetManager.getInstance().getCount() + "" : tag;
         this.target = null;
+        this.repeatCount = -1;
+        this.repeatMode = -1;
+        IdeaAnimatorSetManager.getInstance().add(this);
     }
 
     public String getTag() {
         return tag;
     }
 
-    public IdeaAnimator get(int index) {
+    public IdeaAnimator getChild(int index) {
         Animator animator = set.getChildAnimations().get(index);
-        IdeaAnimator idea = new IdeaAnimator(animator);
-        return idea;
+        return new IdeaAnimator(animator);
     }
 
-    public List<Animator> get() {
+    public List<Animator> getAllChild() {
         return set.getChildAnimations();
+    }
+
+    public IdeaAnimatorSet addListener(Animator.AnimatorListener listener) {
+        set.addListener(listener);
+        return this;
+    }
+
+    public IdeaAnimatorSet addUpdateListener(Animator.AnimatorPauseListener listener) {
+        set.addPauseListener(listener);
+        return this;
+    }
+
+    public int getRepeatCount() {
+        return repeatCount;
+    }
+
+    public int getRepeatMode() {
+        return repeatMode;
     }
 
     /**
@@ -106,8 +138,57 @@ public class IdeaAnimatorSet {
         return this;
     }
 
+    public void setupEndValues() {
+        set.setupEndValues();
+    }
+
+    public IdeaAnimatorSet setRepeat(int repeatCount) {
+        return setRepeat(repeatCount, IdeaUtil.MODE_RESTART);
+    }
+
+    public IdeaAnimatorSet setRepeat(int repeatCount, int repeatMode) {
+        ArrayList<Animator> animators = set.getChildAnimations();
+        for (Animator i : animators) {
+            ((ValueAnimator)i).setRepeatCount(repeatCount);
+            ((ValueAnimator)i).setRepeatMode(repeatMode);
+        }
+        this.repeatCount = repeatCount;
+        this.repeatMode = repeatMode;
+        return this;
+    }
+
+    public void setupStartValues() {
+        set.setupStartValues();
+    }
+
+    public void pause() {
+        set.pause();
+    }
+
+    public void reverse() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            set.reverse();
+        } else {
+            Log.e(TAG, "IdeaAnimatorSet#reverse() didn't work at sdk version number below 26");
+        }
+    }
+
+    public void resume() {
+        set.resume();
+    }
+
     public void start() {
         set.start();
+    }
+
+    public IdeaAnimatorSet startCycle(Handler mainHandler, int count) {
+        //Do nothing now.
+        start();
+        return this;
+    }
+
+    public IdeaAnimatorSet newCopy() {
+        return new IdeaAnimatorSet(set.clone());
     }
 
     private ValueAnimator[] convertType(IdeaAnimator... animators) {

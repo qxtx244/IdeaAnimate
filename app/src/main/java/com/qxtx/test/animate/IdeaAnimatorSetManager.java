@@ -38,20 +38,22 @@ public class IdeaAnimatorSetManager implements IManager<IdeaAnimatorSet> {
         return baseSet().playSequentially(ideas);
     }
 
+    public static IdeaAnimatorSet repeat(int repeat) {
+        return null;
+    }
+
     private static IdeaAnimatorSet baseSet() {
-        IdeaAnimatorSet ideaSet = new IdeaAnimatorSet();
-        IdeaAnimatorSetManager.getInstance().setList.add(ideaSet);
-        return ideaSet;
+        return new IdeaAnimatorSet();
     }
 
     @Override
-    public void add(IdeaAnimatorSet animator) {
-        setList.add(animator);
+    public void add(IdeaAnimatorSet ideaSet) {
+        setList.add(ideaSet);
     }
 
     @Override
-    public void remove(IdeaAnimatorSet animator) {
-        setList.remove(animator);
+    public void remove(IdeaAnimatorSet ideaSet) {
+        setList.remove(ideaSet);
     }
 
     @Override
