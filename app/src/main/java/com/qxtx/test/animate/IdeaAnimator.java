@@ -15,10 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Property;
-
 import junit.framework.Assert;
-
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 
 /** Solution method of animator. **/
@@ -145,6 +142,41 @@ public final class IdeaAnimator {
         animator.removeUpdateListener(listener);
     }
 
+    /**
+     * WTF method?
+     * @param property
+     * @param converter
+     * @param evaluator
+     * @param values
+     * @return {@link IdeaAnimator} The object called with this
+     */
+    public <T, V, P> IdeaAnimator ofObject(Property<T, P> property, TypeConverter<V, P> converter, TypeEvaluator<V> evaluator, V... values) {
+        PropertyValuesHolder holder = PropertyValuesHolder.ofObject(property, converter, evaluator, values);
+        return setPropertyValuesHolder(holder);
+    }
+
+    /**
+     * WTF method?
+     * @param property
+     * @param values
+     * @return
+     */
+    public IdeaAnimator ofFloat(Property<?, Float> property, float... values) {
+        PropertyValuesHolder holder = PropertyValuesHolder.ofFloat(property, values);
+        return setPropertyValuesHolder(holder);
+    }
+
+    /**
+     * What the fuck method ?
+     * @param property
+     * @param values
+     * @return {@link IdeaAnimator} The object called with this
+     */
+    public IdeaAnimator ofInt(Property<?, Integer> property, int... values) {
+        PropertyValuesHolder holder = PropertyValuesHolder.ofInt(property, values);
+        return setPropertyValuesHolder(holder);
+    }
+
     public void setAllowStart(boolean allowStart) {
         this.allowStart = allowStart;
     }
@@ -261,9 +293,13 @@ public final class IdeaAnimator {
      */
     public IdeaAnimator setProperty(Property property) {
         if (animator instanceof ObjectAnimator) {
-            ((ObjectAnimator)animator).setProperty(property);
+            if (!(((ObjectAnimator) animator).getTarget() instanceof PropertyFactory)) {
+                ((ObjectAnimator) animator).setProperty(property);
+            } else {
+                Log.e(TAG, "Invalid call. This method can't used for this animator that target is instance of PropertyFactory<T>");
+            }
         } else {
-            Log.e(TAG, "Invalid call. It was only set for ObjectAnimator.");
+            Log.e(TAG, "Invalid call. This method was only used for ObjectAnimator.");
         }
         return this;
     }
@@ -271,11 +307,10 @@ public final class IdeaAnimator {
     /**
      * Set a propertyValuesHolder. It is best not set {@link #setIntValues}, {@link #setFloatValues} or {@link #setObjectValues}
      *  and it together, or make conflict. You only need to call this and {@link #setDuration} to make a simply animator.
-     * @deprecated It can be instead of {@link #setPath} and it can use with more simply.
+     * It can be instead of {@link #setPath} and it can use with more simply.
      * @param holders  A PropertyValuesHolder include property, values and change path
      * @return  {@link IdeaAnimator} The object called with this
      **/
-    @Deprecated
     public IdeaAnimator setPropertyValuesHolder(PropertyValuesHolder... holders) {
         animator.setValues(holders);
         return this;

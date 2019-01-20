@@ -44,6 +44,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 IdeaAnimatorManager.bounce(btn, 30f).start();
+                IdeaAnimator ideaAnimator = new IdeaAnimator(btn);
             }
         });
 //        new Handler().postDelayed(() -> {
