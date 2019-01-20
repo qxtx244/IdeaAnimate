@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                IdeaAnimatorManager.textColorfully(text, "#00ff33", "#ff0088").start();
+                IdeaAnimatorManager.bounce(btn, 30f).start();
             }
         });
 //        new Handler().postDelayed(() -> {
