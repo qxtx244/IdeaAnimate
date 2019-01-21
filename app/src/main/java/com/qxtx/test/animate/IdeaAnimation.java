@@ -7,29 +7,41 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 
+import java.lang.ref.WeakReference;
+
 /**
  * @CreateDate 2019/01/16 16:05.
  * @Author QXTX-GOSPELL
  */
 public class IdeaAnimation {
     private final String TAG = "IdeaAnimation";
+    private final WeakReference<View> target;
     private final String tag;
     private Animation animation;
 
-    public IdeaAnimation(@NonNull Animation animation) {
-        this(animation, null);
+    public IdeaAnimation(@NonNull View target, @NonNull Animation animation) {
+        this(target, animation, null);
     }
 
-    public IdeaAnimation(@NonNull Animation animation, @Nullable String tag) {
+    public IdeaAnimation(@NonNull View target, @NonNull Animation animation, @Nullable String tag) {
         IdeaAnimationManager manager = IdeaAnimationManager.getInstance();
         this.tag = tag == null ? manager.getCount() + "" : tag;
         this.animation = animation;
+        this.target = new WeakReference<View>(target);
 
         manager.add(this);
     }
 
     public String getTag() {
         return tag;
+    }
+
+    public View getTarget() {
+        return target.get();
+    }
+
+    public Animation getAnimation() {
+        return animation;
     }
 
     public IdeaAnimation setBackgroundColor(int backgroundColor) {
@@ -72,6 +84,10 @@ public class IdeaAnimation {
         return this;
     }
 
+    public IdeaAnimation setRepeat(int repeatCount) {
+        return setRepeat(repeatCount, IdeaUtil.MODE_RESTART);
+    }
+
     public IdeaAnimation setRepeat(int repeatCount, int repeatMode) {
         animation.setRepeatCount(repeatCount);
         animation.setRepeatMode(repeatMode);
@@ -98,14 +114,17 @@ public class IdeaAnimation {
         return this;
     }
 
-    public void start(@NonNull View v) {
-        startWithDelay(v, 0);
+    public void start() {
+        startWithDelay(0);
     }
 
-    public void startWithDelay(@NonNull View v, final long delay) {
-            v.postDelayed(() -> {
-                v.startAnimation(animation);
+    public void startWithDelay(final long delay) {
+        boolean viewExist = target != null && target.get() != null;
+        if (viewExist) {
+            target.get().postDelayed(() -> {
+                target.get().startAnimation(animation);
             }, delay);
+        }
     }
 
     public boolean hasEnded() {

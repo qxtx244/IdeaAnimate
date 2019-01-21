@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Path;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,8 +13,11 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.qxtx.test.animate.IdeaAnimation;
+import com.qxtx.test.animate.IdeaAnimationManager;
 import com.qxtx.test.animate.IdeaAnimator;
 import com.qxtx.test.animate.IdeaAnimatorManager;
 import com.qxtx.test.animate.IdeaAnimatorSet;
@@ -30,12 +34,14 @@ public class MainActivity extends Activity {
     private Intent intent, intent1;
     private Button btn;
     private IdeaAnimator idea;
+    private LinearLayout layout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn = (Button)findViewById(R.id.send);
+        layout = (LinearLayout) findViewById(R.id.btnLayout);
         ImageView img = (ImageView)findViewById(R.id.image);
         TextView text = (TextView)findViewById(R.id.text);
         Path path = setPath();
@@ -43,24 +49,10 @@ public class MainActivity extends Activity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                IdeaAnimatorManager.bounce(btn, 30f).start();
-                IdeaAnimator ideaAnimator = new IdeaAnimator(btn);
+//                IdeaAnimationManager.translate(btn, 500f, 700f).start();
+                IdeaAnimatorManager.doorOpen(btn, IdeaUtil.RIGHT).start();
             }
         });
-//        new Handler().postDelayed(() -> {
-//            IdeaAnimator idea2 = IdeaAnimatorManager.shake(btn, 1000, IdeaUtil.HORIZONTAL, 2);
-//            idea2.start();
-//        }, 2000);
-
-//        AnimationDrawable drawable = new AnimationDrawable();
-//        drawable.addFrame(getResources().getDrawable(R.mipmap.alias), 100);
-//        drawable.addFrame(getResources().getDrawable(R.mipmap.alias2), 100);
-//        drawable.addFrame(getResources().getDrawable(R.mipmap.gohome), 100);
-//        drawable.addFrame(getResources().getDrawable(R.mipmap.ic_launcher), 100);
-//        img.setImageDrawable(drawable);
-//        ((AnimationDrawable)img.getDrawable()).start();
-
-        ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(btn, "x", "y", path);
     }
 
     private Path setPath() {

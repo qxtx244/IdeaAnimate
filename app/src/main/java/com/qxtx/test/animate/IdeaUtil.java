@@ -3,6 +3,7 @@ package com.qxtx.test.animate;
 import android.animation.ValueAnimator;
 import android.support.annotation.IntDef;
 import android.support.annotation.StringDef;
+import android.view.Gravity;
 import android.widget.LinearLayout;
 
 /**
@@ -10,24 +11,26 @@ import android.widget.LinearLayout;
  * @Author QXTX-GOSPELL
  */
 public class IdeaUtil {
-    @IntDef({HORIZONTAL, VERTICAL})
-    @interface Orientation {
-    }
+    @IntDef({LEFT, TOP, RIGHT, BOTTOM})
+    @interface Direction {}
+    public static final int LEFT = Gravity.LEFT;
+    public static final int TOP = Gravity.TOP;
+    public static final int RIGHT = Gravity.RIGHT;
+    public static final int BOTTOM = Gravity.BOTTOM;
 
+    @IntDef({HORIZONTAL, VERTICAL})
+    @interface Orientation {}
     public static final int HORIZONTAL = LinearLayout.HORIZONTAL;
     public static final int VERTICAL = LinearLayout.VERTICAL;
 
     @IntDef({MODE_RESTART, MODE_REVERSE, INFINITE})
-    @interface RepeatMode {
-    }
-
+    @interface RepeatMode {}
     public static final int MODE_RESTART = ValueAnimator.RESTART;
     public static final int MODE_REVERSE = ValueAnimator.REVERSE;
     public static final int INFINITE = ValueAnimator.INFINITE;
 
     @StringDef({TYPE_TRANSLATE, TYPE_ROTATION, TYPE_ALPHA, TYPE_SCALE})
-    @interface AnimtionType {
-    }
+    @interface AnimtionType {}
     public static final String TYPE_TRANSLATE = "Translate";
     public static final String TYPE_ROTATION = "Rotation";
     public static final String TYPE_ALPHA = "Alpha";

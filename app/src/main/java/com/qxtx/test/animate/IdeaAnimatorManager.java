@@ -1,6 +1,9 @@
 package com.qxtx.test.animate;
 
 import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.support.annotation.NonNull;
@@ -11,8 +14,6 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
-
-import junit.framework.Assert;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,7 +125,7 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
 
         return baseIdea(insteadTarget, DEFAULT_DURATION * 10)
                 .setPropertyName(PropertyFactory.PROPERTY_CUSTOM)
-                .setObjectValues(new ArgbTypeEvaluator(), colorString);
+                .setObjectValues(new ArgbTypeEvaluator(), (Object) colorString);
     }
 
     public static IdeaAnimator bgColorfully(@NonNull View target, @NonNull int... colorValues) {
@@ -152,11 +153,53 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
     public static IdeaAnimator breathe(@NonNull View target) {
         float startAlpha = target.getAlpha();
         float cAlpha = startAlpha == 1f ? 0f : 1f;
-        return baseIdea(target, 1000)
+        return baseIdea(target, DEFAULT_DURATION * 2)
                 .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_REVERSE)
                 .setPropertyName("alpha")
                 .setFloatValues(startAlpha, cAlpha, startAlpha)
                 .setInterpolator(new LinearInterpolator());
+    }
+
+    //需要自定义属性，同时使用setPivotY（）和setRotationY()
+    public static IdeaAnimator doorOpen(@NonNull View target, @IdeaUtil.Direction int direction) {
+        float rotate;
+        switch (direction) {
+            case IdeaUtil.LEFT:
+                rotate = target.getRotationY();
+//                target.setPivotY((float)target.getHeight());
+                return rotateY(target, rotate, rotate - 180f);
+            case IdeaUtil.TOP:
+                rotate = target.getRotationX();
+//                target.setPivotX((float)target.getWidth());
+                return rotateX(target, rotate, rotate - 180f);
+            case IdeaUtil.RIGHT:
+                rotate = target.getRotationY();
+//                target.setPivotY((float)target.getHeight());
+                return rotateY(target, rotate, rotate + 180f);
+            case IdeaUtil.BOTTOM:
+                rotate = target.getRotationX();
+//                target.setPivotX((float)target.getWidth());
+                return rotateX(target, rotate, rotate + 180f);
+        }
+        throw new IllegalStateException("Invalid direction! Failed to execute animator.");
+    }
+
+    public static IdeaAnimator flicker(@NonNull View target) {
+        int fromVisible = target.getVisibility();
+        int toVisible = fromVisible == View.VISIBLE ? View.INVISIBLE : View.VISIBLE;
+        return new IdeaAnimator()
+                .setDuration(DEFAULT_DURATION)
+                .setIntValues(fromVisible, toVisible)
+                .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_REVERSE)
+                .setInterpolator(new LinearInterpolator())
+                .addUpdateListener(animation -> {
+                    float fraction = animation.getAnimatedFraction();
+                    if (fraction < 0.5f) {
+                        target.setVisibility(fromVisible);
+                    } else {
+                        target.setVisibility(toVisible);
+                    }
+                });
     }
 
     public static IdeaAnimatorSet heartBeats(@NonNull View target, int level) {
@@ -178,11 +221,13 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
      * @param math The formula of path just like "y = kx + b"
      * @return {@link IdeaAnimator} The Object which call this.
      */
-    public static IdeaAnimator mathematicalPath(@NonNull View target, String math) {
-        IdeaAnimator idea = null;
+    public static IdeaAnimator mathPath(@NonNull View target, String math) {
+        IdeaAnimator idea = baseIdea(target, DEFAULT_DURATION);
+        math = math.replace(" ", "").toLowerCase().substring(2);
 
-        //Do nothing now
-
+        float k = 1f;
+        float b = 0f;
+        char[] array = math.toCharArray();
         return idea;
     }
 
@@ -260,7 +305,7 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
         }
         return baseIdea(insteadTarget, DEFAULT_DURATION * 10)
                 .setPropertyName(PropertyFactory.PROPERTY_CUSTOM)
-                .setObjectValues(new ArgbTypeEvaluator(), colorString);
+                .setObjectValues(new ArgbTypeEvaluator(), (Object) colorString);
     }
 
     public static IdeaAnimator translate(@NonNull View target, float fromX, float fromY, float toX, float toY) {
