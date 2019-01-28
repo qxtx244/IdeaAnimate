@@ -1,8 +1,6 @@
 package com.qxtx.test.animate;
 
 import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
-import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.graphics.Path;
@@ -14,6 +12,7 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -122,7 +121,6 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
                 }
             };
         }
-
         return baseIdea(insteadTarget, DEFAULT_DURATION * 10)
                 .setPropertyName(PropertyFactory.PROPERTY_CUSTOM)
                 .setObjectValues(new ArgbTypeEvaluator(), (Object) colorString);
@@ -142,7 +140,7 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
     public static IdeaAnimatorSet bounce(@NonNull View target, float high, @IdeaUtil.Orientation int orientation) {
         long duration = 1000;
         high = high < 0f ? 0f : high;
-        String propertyName = orientation == IdeaUtil.HORIZONTAL ? "translationY" : "translationY";
+        String propertyName = orientation == IdeaUtil.HORIZONTAL ? "translationX" : "translationY";
         return IdeaAnimatorSetManager.sequentially(
                 floatIdea(target, duration / 12, propertyName, 0f, -high)
                         .setInterpolator(new DecelerateInterpolator()),
@@ -160,28 +158,52 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
                 .setInterpolator(new LinearInterpolator());
     }
 
-    //需要自定义属性，同时使用setPivotY（）和setRotationY()
-    public static IdeaAnimator doorOpen(@NonNull View target, @IdeaUtil.Direction int direction) {
-        float rotate;
+    public static IdeaAnimator[] domino(@NonNull View[] targets, @IdeaUtil.Direction int direction) {
+        IdeaAnimator[] ideas = new IdeaAnimator[targets.length];
+        long[] durations = new long[ideas.length];
+        float[] degrees = new float[ideas.length];
+
+        int index = checkCollision(targets, degrees);
+        for (int i = 0; i < durations.length; i++) {
+            durations[i] = DEFAULT_DURATION;
+        }
+
+        for (int i = 0; i < targets.length; i++) {
+            if (i > index) {
+                degrees[i] = 0f;
+            }
+
+            ideas[i] = IdeaAnimatorManager
+                    .rolling(targets[i], direction, degrees[i]).setDuration(durations[i])
+                    .setStartDelay((durations[i] * i) / 2);
+        }
+
+        return ideas;
+    }
+
+    public static IdeaAnimator door(@NonNull View target, @IdeaUtil.Direction int direction) {
+        float toValue;
+        float height = (float)target.getHeight();
+        float width = (float)target.getWidth();
+        float rotateX = target.getRotationX();
+        float rotateY = target.getRotationY();
+        String type = (direction == IdeaUtil.LEFT || direction == IdeaUtil.RIGHT) ? "y" : "x";
+
         switch (direction) {
             case IdeaUtil.LEFT:
-                rotate = target.getRotationY();
-//                target.setPivotY((float)target.getHeight());
-                return rotateY(target, rotate, rotate - 180f);
+                toValue = rotateY == 0f ? -180f : 0f;
+                return doorMove(target, 0f, height / 2f, toValue, type);
             case IdeaUtil.TOP:
-                rotate = target.getRotationX();
-//                target.setPivotX((float)target.getWidth());
-                return rotateX(target, rotate, rotate - 180f);
+                toValue = rotateX == 0f ? 180f : 0f;
+                return doorMove(target, width / 2f, 0f, toValue, type);
             case IdeaUtil.RIGHT:
-                rotate = target.getRotationY();
-//                target.setPivotY((float)target.getHeight());
-                return rotateY(target, rotate, rotate + 180f);
+                toValue = rotateY == 0f ? 180f : 0f;
+                return doorMove(target, width, height / 2f, toValue, type);
             case IdeaUtil.BOTTOM:
-                rotate = target.getRotationX();
-//                target.setPivotX((float)target.getWidth());
-                return rotateX(target, rotate, rotate + 180f);
+                toValue = rotateX == 0f ? -180f : 0f;
+                return doorMove(target, width / 2f, height, toValue, type);
         }
-        throw new IllegalStateException("Invalid direction! Failed to execute animator.");
+        throw new IllegalStateException("Invalid direction!");
     }
 
     public static IdeaAnimator flicker(@NonNull View target) {
@@ -228,6 +250,74 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
         float k = 1f;
         float b = 0f;
         char[] array = math.toCharArray();
+        return idea;
+    }
+
+    public static IdeaAnimator rolling(@NonNull View target, @IdeaUtil.Direction int direction, float degress) {
+        return roll(target, degress, direction);
+    }
+
+    public static IdeaAnimator rolling(@NonNull View target, @IdeaUtil.Direction int direction, int circle) {
+        float height = (float)target.getHeight();
+        float width = (float)target.getWidth();
+        long duration = circle * 1000;
+
+        target.setRotation(0f);
+
+        IdeaAnimator idea = roll(target, 360f * circle, direction);
+        if (idea == null) {
+            return null;
+        }
+
+        idea.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            private final float alreadyMoveX = target.getTranslationX();
+            private final float alreadyMoveY = target.getTranslationY();
+            private final float alreadyRotate = target.getRotation();
+            private final float[][] rules = new float[][] {{0f, 0f}, {width, 0f}, {width, height}, {0f, height}};
+            private final float[][] pivots = checkPivots(rules, direction);
+            private float[] translate = new float[] {alreadyMoveX, alreadyMoveY};
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if (target.getRotation() % 90f != 0f) {
+                    return ;
+                }
+
+                int process = (int)(target.getRotation()- alreadyRotate) / 90;
+                switch (process % 4) {
+                    case 1:
+                        translate[0] += height;
+                        translate[1] = alreadyMoveY + height;
+                        break;
+                    case 2:
+                        translate[0] += 2f * width;
+                        translate[1] = alreadyMoveY + height;
+                        break;
+                    case 3:
+                        translate[0] += height;
+                        translate[1] = alreadyMoveY + 0f;
+                        break;
+                }
+
+                if (process > 0) {
+                    fixTargetParams(process, translate, circle);
+                }
+            }
+
+            private void fixTargetParams(int process, float[] translate, int circle) {
+                if (process > 0) {
+                    int sequence = ((process % 4) == 0 ? 4 : process % 4) - 1;
+                    target.setPivotX(pivots[sequence][0]);
+                    target.setPivotY(pivots[sequence][1]);
+                }
+
+                if ((int)(target.getRotation() - alreadyRotate) != (360 * circle)) {
+                    target.setTranslationX(translate[0]);
+                    target.setTranslationY(translate[1]);
+                }
+            }
+        }).setDuration(duration);
+
         return idea;
     }
 
@@ -315,6 +405,12 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
         return baseIdea(target, DEFAULT_DURATION).setPath(path);
     }
 
+    public static IdeaAnimator translateRelative(@NonNull View target, float relativeX, float relativeY) {
+        int[] pos = new int[2];
+        target.getLocationOnScreen(pos);
+        return translate(target, pos[0], pos[1], pos[0] + relativeX, pos[1] + relativeY);
+    }
+
     public static IdeaAnimator translateX(@NonNull View target, float... values) {
         return floatIdea(target, DEFAULT_DURATION, "translationX", values);
     }
@@ -329,6 +425,82 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
 
     private static IdeaAnimator baseIdea(@NonNull Object o, long duration) {
         return new IdeaAnimator(o).setDuration(duration);
+    }
+
+    private static IdeaAnimator doorMove(@NonNull View target, float pivotX, float pivotY, float toValue, String type) {
+        target.setPivotX(pivotX);
+        target.setPivotY(pivotY);
+        boolean isHorizontal = type.equals("x");
+        float fromValue = isHorizontal ? target.getRotationX() : target.getRotationY();
+        return isHorizontal ? rotateX(target, fromValue, toValue) : rotateY(target, fromValue, toValue);
+    }
+
+    private static IdeaAnimator roll(@NonNull View target, float degrees, int direction) {
+        float height = (float)target.getHeight();
+        float width = (float)target.getWidth();
+        if (height == 0f || width == 0f) {
+            Log.e(TAG, "Fail to execute rolling. Target view is not ready.");
+            return null;
+        }
+
+        float pivotX = (direction == IdeaUtil.LEFT || direction == IdeaUtil.BOTTOM) ? 0f : width;
+        float pivotY = direction == IdeaUtil.TOP ? 0f : height;
+        target.setPivotX(pivotX);
+        target.setPivotY(pivotY);
+
+        float fromValue = target.getRotation();
+        float toValue = direction == IdeaUtil.LEFT ? fromValue - degrees : fromValue + degrees;
+        return rotate(target, fromValue, toValue)
+                .setInterpolator(new LinearInterpolator());
+    }
+
+    private static float[][] checkPivots(float[][] rules, int direction) {
+        switch (direction) {
+            case IdeaUtil.LEFT:
+                return rules;
+            case IdeaUtil.TOP:
+                return new float[][] {rules[0], rules[3], rules[1], rules[2]};
+            case IdeaUtil.RIGHT:
+                return new float[][] {rules[1], rules[0], rules[3], rules[2]};
+            case IdeaUtil.BOTTOM:
+                return new float[][] {rules[2], rules[1], rules[0], rules[3]};
+            default:
+                throw new IllegalStateException("Invalid direction of rolling animtor!");
+        }
+    }
+
+    private static int checkCollision(@NonNull View[] targets, float[] degrees) {
+        int index = 1;
+        for (int i = 0; i < targets.length; i++) {
+            int v0_w = targets[i].getWidth();
+            int v0_h = targets[i].getHeight();
+            int[] v0_pos = new int[2];
+            int[] v1_pos = new int[2];
+            targets[i].getLocationOnScreen(v0_pos);
+            if (i + 1 < targets.length) {
+                targets[i + 1].getLocationOnScreen(v1_pos);
+            } else {
+                return targets.length - 1;
+            }
+
+            float v0_c_x = v0_pos[0] + v0_w;
+            float v0_c_y = v0_pos[1] + v0_h;
+            float v0_b_x = v1_pos[0];
+            float v1_h = targets[i + 1].getHeight();
+
+            float len_trueLen = v0_b_x - v0_c_x;
+            if (v1_pos[0] - v0_c_x < v0_h) {
+                float y_b0 = v0_c_y - (float)Math.sqrt(v0_h * v0_h - Math.pow(v0_b_x - v0_c_x, 2));
+                if (v1_pos[1] < y_b0 && (y_b0 < v1_pos[1] + v1_h / 2f)) {
+                    degrees[i] = 90f - (float)(180f * Math.acos(len_trueLen / v0_h) / Math.PI);
+                    index++;
+                } else {
+                    Log.e(TAG, "The one can not be collision next one." + i);
+                }
+            }
+        }
+
+        return index;
     }
 
     @Override
