@@ -1,6 +1,7 @@
 package com.qxtx.test.animate;
 
 import android.content.Context;
+import android.graphics.Camera;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
@@ -14,6 +15,7 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
+import android.view.animation.Transformation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
@@ -29,7 +31,6 @@ import java.util.List;
 public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     public static final String TAG = "IdeaAnimationManager";
     private static final int DEFAULT_DURATION = 500;
-    private static final int ABSOLUTE = Animation.ABSOLUTE;
     private static IdeaAnimationManager manager;
     private List<IdeaAnimation> animationList;
 
@@ -127,9 +128,9 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         float toXValue = orientation == IdeaUtil.VERTICAL ? 0f : high;
         float toYValue = orientation == IdeaUtil.VERTICAL ? high : 0f;
 
-        TranslateAnimation animation = new TranslateAnimation(ABSOLUTE, -toXValue,
-                ABSOLUTE, 0f,
-                ABSOLUTE, -toYValue, ABSOLUTE, 0f);
+        TranslateAnimation animation = new TranslateAnimation(IdeaUtil.ABSOLUTE, -toXValue,
+                IdeaUtil.ABSOLUTE, 0f,
+                IdeaUtil.ABSOLUTE, -toYValue, IdeaUtil.ABSOLUTE, 0f);
 
         return new IdeaAnimation(target, animation)
                 .setDuration(DEFAULT_DURATION * 2)
@@ -157,13 +158,13 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         level = level <= 0 ? 1 : level;
         float beatsLevel = (float)level * 0.2f;
         IdeaAnimation animX = baseScale(target, beatsLevel, beatsLevel,
-                Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+                IdeaUtil.RELATIVE_TO_SELF, 0.5f, IdeaUtil.RELATIVE_TO_SELF, 0.5f)
                 .setDuration(DEFAULT_DURATION)
-                .setRepeat(Animation.INFINITE, Animation.REVERSE);
+                .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_REVERSE);
         IdeaAnimation animY = baseScale(target, beatsLevel, beatsLevel,
-                Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+                IdeaUtil.RELATIVE_TO_SELF, 0.5f, IdeaUtil.RELATIVE_TO_SELF, 0.5f)
                 .setDuration(DEFAULT_DURATION)
-                .setRepeat(Animation.INFINITE, Animation.REVERSE);
+                .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_REVERSE);
         AnimationSet set = new AnimationSet(true);
         set.addAnimation(animX.getAnimation());
         set.addAnimation(animY.getAnimation());
@@ -173,42 +174,82 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     }
 
     public static void lineMove(@NonNull View target, @NonNull float[]... pointers) {
-//        IdeaAnimation[] idea = new IdeaAnimation[pointers.length];
-//        for (int i = 0; i < pointers.length; i++) {
-//            float[] subPointer = pointers[i];
-//            TranslateAnimation animation = new TranslateAnimation(
-//                    ABSOLUTE, target.getTranslationX(), ABSOLUTE, subPointer[0],
-//                    ABSOLUTE, target.getTranslationY(), ABSOLUTE, subPointer[1]);
-//            idea[i] = new IdeaAnimation(target, animation)
-//                    .setDuration(DEFAULT_DURATION)
-//                    .setFillEnabled(true)
-//                    .setFillAfter(true);
-//        }
-//
-//        for (int i = 0; i < idea.length; i++) {
-//            idea[i].startWithDelay(DEFAULT_DURATION * i);
-//        }
-    }
-
-    public static IdeaAnimation doorOpen(@NonNull View target, @IdeaUtil.Direction int direction) {
         throw new IllegalStateException("Useless this method now!");
     }
 
-    public static IdeaAnimation rotate(@NonNull View target, float toDegrees,
+    public static void door(@NonNull View target, @IdeaUtil.Direction int direction) {
+        float toValue;
+        float height = (float)target.getHeight();
+        float width = (float)target.getWidth();
+        float rotateX = target.getRotationX();
+        float rotateY = target.getRotationY();
+        String type = (direction == IdeaUtil.LEFT || direction == IdeaUtil.RIGHT) ? "y" : "x";
+        boolean isRotateX = rotateX == 0f;
+        boolean isRotateY = rotateY == 0f;
+
+        switch (direction) {
+            case IdeaUtil.LEFT:
+                toValue = isRotateY ? -180f : 0f;
+                doorMove(target, 0f, height / 2f, toValue, type);
+                return ;
+            case IdeaUtil.TOP:
+                toValue = isRotateX ? 180f : 0f;
+                doorMove(target, width / 2f, 0f, toValue, type);
+                return ;
+            case IdeaUtil.RIGHT:
+                toValue = isRotateY ? 180f : 0f;
+                doorMove(target, width, height / 2f, toValue, type);
+                return ;
+            case IdeaUtil.BOTTOM:
+                toValue = isRotateX ? -180f : 0f;
+                doorMove(target, width / 2f, height, toValue, type);
+                return ;
+        }
+    }
+
+    public static IdeaAnimation rotate(@NonNull View target, float toAngle,
                                        int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) {
-        return baseRotate(target, toDegrees, pivotXType, pivotXValue, pivotYType, pivotYValue);
+        return baseRotate(target, target.getRotation(), toAngle, pivotXType, pivotXValue, pivotYType, pivotYValue);
     }
 
-    public static IdeaAnimation rotate(@NonNull View target, float toDegrees) {
-        return baseRotate(target, toDegrees, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+    public static IdeaAnimation rotate(@NonNull View target, float toAngle) {
+        return baseRotate(target, target.getRotation(), toAngle,
+                IdeaUtil.RELATIVE_TO_SELF, 0.5f, IdeaUtil.RELATIVE_TO_SELF, 0.5f);
     }
 
-    public static IdeaAnimation rotateX(@NonNull View target, float toDegrees, boolean is3D) {
-        throw new IllegalStateException("Useless this method now!");
+    public static void rotateX(@NonNull View target, float toAngle, boolean is3D) {
+        float fromZ = target.getTranslationZ();
+        float toZ = fromZ;
+        if (is3D) {
+            toZ += -target.getWidth();
+        }
+        float[] fromValues = new float[] {target.getRotationX(), 0.0f, fromZ};
+        float[] toValues = new float[] {toAngle, 0.0f, toZ};
+        new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_X, fromValues, toValues)
+                .duration(DEFAULT_DURATION)
+                .start(0);
     }
 
-    public static IdeaAnimation rotateY(@NonNull View target, float toDegrees, boolean is3D) {
-        throw new IllegalStateException("Useless this method now!");
+    public static void rotateY(@NonNull View target, float toAngle, boolean is3D) {
+        float fromZ = target.getTranslationZ();
+        float toZ = fromZ;
+        if (is3D) {
+            toZ += -target.getWidth();
+        }
+
+        float[] fromValues = new float[] {0.0f, target.getRotationX(), fromZ};
+        float[] toValues = new float[] {0.0f, toAngle, toZ};
+       new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_Y, fromValues, toValues)
+               .duration(DEFAULT_DURATION)
+               .start(0);
+    }
+
+    public static void rotateZ(@NonNull View target, float toAngle, boolean is3D) {
+        float[] fromValues = new float[] {0.0f, 0.0f, target.getRotation()};
+        float[] toValues = new float[] {0.0f, 0.0f, toAngle};
+        new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_Z, fromValues, toValues)
+                .duration(DEFAULT_DURATION)
+                .start(0);
     }
 
     public static IdeaAnimation scale(@NonNull View target, float toX, float toY,
@@ -217,42 +258,68 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     }
 
     public static IdeaAnimation scale(@NonNull View target, float toX, float toY) {
-        return baseScale(target, toX, toY, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        return baseScale(target, toX, toY, IdeaUtil.RELATIVE_TO_SELF, 0.5f, IdeaUtil.RELATIVE_TO_SELF, 0.5f);
     }
 
     public static IdeaAnimation scaleX(@NonNull View target, float toX) {
         float toY = target.getScaleY();
-        return baseScale(target, toX, toY, ABSOLUTE, 0.0f, ABSOLUTE, 0.0f);
+        return baseScale(target, toX, toY, IdeaUtil.ABSOLUTE, 0.0f, IdeaUtil.ABSOLUTE, 0.0f);
     }
 
     public static IdeaAnimation scaleY(@NonNull View target, float toY) {
         float toX = target.getScaleX();
-        return baseScale(target, toX, toY, ABSOLUTE, 0.0f, ABSOLUTE, 0.0f);
+        return baseScale(target, toX, toY, IdeaUtil.ABSOLUTE, 0.0f, IdeaUtil.ABSOLUTE, 0.0f);
     }
 
     public static IdeaAnimation shake(@NonNull View target, @IdeaUtil.Orientation int orientation, int level) {
-        throw new IllegalStateException("Useless this method now!");
+        boolean isHor = orientation == IdeaUtil.HORIZONTAL;
+        float shakeValue = ((level > 10 ? 100f : (float)level) * 10f) / 2f;
+        float fromX = isHor ? target.getTranslationX() - shakeValue : 0f;
+        float fromY = isHor ? 0f : target.getTranslationY() - shakeValue;
+        float toX = isHor ? shakeValue : 0f;
+        float toY = isHor ? 0f : shakeValue;
+
+        TranslateAnimation animation = new TranslateAnimation(IdeaUtil.ABSOLUTE, fromX, IdeaUtil.ABSOLUTE, toX,
+                IdeaUtil.ABSOLUTE, fromY, IdeaUtil.ABSOLUTE, toY);
+        return new IdeaAnimation(target, animation)
+                .setDuration(100)
+                .setInterpolator(new LinearInterpolator())
+                .setRepeat(2, IdeaUtil.MODE_REVERSE);
     }
 
     public static IdeaAnimation swinging(@NonNull View target, float angle) {
-        throw new IllegalStateException("Useless this method now!");
+        float rotate = target.getRotation();
+        float fromAngle = rotate - angle;
+        float toAngle = rotate + angle;
+        return baseRotate(target, fromAngle, toAngle,
+                IdeaUtil.RELATIVE_TO_SELF, 0.5f, IdeaUtil.RELATIVE_TO_SELF, 0.5f)
+                .setRepeat(2, IdeaUtil.MODE_REVERSE);
+    }
+
+    public static IdeaAnimation swinging(@NonNull View target) {
+        float rotate = target.getRotation();
+        float fromAngle = rotate - 15f;
+        float toAngle = rotate + 15f;
+        return baseRotate(target, fromAngle, toAngle,
+                IdeaUtil.RELATIVE_TO_SELF, 0.5f, IdeaUtil.RELATIVE_TO_SELF, 0.5f)
+                .setRepeat(2, IdeaUtil.MODE_REVERSE)
+                .setDuration(200);
     }
 
     public static IdeaAnimation translate(@NonNull View target, int toXType, float toXValue, int toYType, float toYValue) {
-        int absolute = ABSOLUTE;
-        return baseTranslate(target, absolute, toXValue, toYType, toYValue);
+        return baseTranslate(target, IdeaUtil.ABSOLUTE, toXValue, toYType, toYValue);
     }
 
     public static IdeaAnimation translate(@NonNull View target, float toX, float toY) {
-        return baseTranslate(target, ABSOLUTE, toX, ABSOLUTE, toY);
+        return baseTranslate(target, IdeaUtil.ABSOLUTE, toX, IdeaUtil.ABSOLUTE, toY);
     }
 
     public static IdeaAnimation translateX(@NonNull View target, float toXValue) {
-        return baseTranslate(target, ABSOLUTE, toXValue, ABSOLUTE, 0.0f);
+        return baseTranslate(target, IdeaUtil.ABSOLUTE, toXValue, IdeaUtil.ABSOLUTE, 0.0f);
     }
 
     public static IdeaAnimation translateY(@NonNull View target, float toYValue) {
-        return baseTranslate(target, ABSOLUTE, 0.0f, ABSOLUTE, toYValue);
+        return baseTranslate(target, IdeaUtil.ABSOLUTE, 0.0f, IdeaUtil.ABSOLUTE, toYValue);
     }
 
     private static IdeaAnimation baseAlpha(@NonNull View v, float fromAlpha, float toAlpha) {
@@ -276,10 +343,9 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
                 .setInterpolator(new LinearInterpolator());
     }
 
-    private static IdeaAnimation baseRotate(@NonNull View v, float toDegrees,
+    private static IdeaAnimation baseRotate(@NonNull View v, float fromAngle, float toAngle,
                                             int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) {
-        float fromDegrees = v.getRotation();
-        RotateAnimation rotate = new RotateAnimation(fromDegrees, toDegrees, pivotXType, pivotXValue, pivotYType, pivotYValue);
+        RotateAnimation rotate = new RotateAnimation(fromAngle, toAngle, pivotXType, pivotXValue, pivotYType, pivotYValue);
         return new IdeaAnimation(v, rotate)
                 .setDuration(DEFAULT_DURATION)
                 .setInterpolator(new LinearInterpolator());
@@ -287,12 +353,23 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
 
     private static IdeaAnimation baseTranslate(@NonNull View v,
                                                int toXType, float toX, int toYType, float toY) {
-        TranslateAnimation translate = new TranslateAnimation(ABSOLUTE, v.getTranslationX(), toXType, toX,
-                ABSOLUTE, v.getTranslationY(), toYType, toY);
+        TranslateAnimation translate = new TranslateAnimation(IdeaUtil.ABSOLUTE, v.getTranslationX(), toXType, toX,
+                IdeaUtil.ABSOLUTE, v.getTranslationY(), toYType, toY);
 
         return new IdeaAnimation(v, translate)
                 .setDuration(DEFAULT_DURATION)
                 .setInterpolator(new LinearInterpolator());
+    }
+
+    private static void doorMove(@NonNull View v, float pivotX, float pivotY, float toValue, String type) {
+        v.setPivotX(pivotX);
+        v.setPivotY(pivotY);
+        boolean isHor = type.equals("x");
+        if (isHor) {
+            rotateX(v, toValue, false);
+        } else {
+            rotateY(v, toValue, false);
+        }
     }
 
     @Override
@@ -450,6 +527,87 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
 
         public boolean isRunning() {
             return animation.isRunning();
+        }
+    }
+
+    private static final class Idea3DRotate extends Animation {
+        private static final String TYPE_TRANSLATE = "translation";
+        private static final String TYPE_ROTATE_X = "rotateX";
+        private static final String TYPE_ROTATE_Y = "rotateY";
+        private static final String TYPE_ROTATE_Z = "rotateZ";
+        private Camera camera;
+        private final String type;
+        private float[] fromValues;
+        private float[] toValues;
+        private WeakReference<View> view;
+        private float centerX, centerY;
+
+        private Idea3DRotate(@NonNull View view, String type, float[] fromValues, @NonNull float[] toValues) {
+            camera = new Camera();
+            this.toValues = new float[] {0f, 0f, 0f};
+            this.fromValues = new float[] {0f, 0f, 0f};
+            this.type = type;
+            this.view = new WeakReference<View>(view);
+            System.arraycopy(fromValues, 0, this.fromValues, 0, fromValues.length);
+            System.arraycopy(toValues, 0, this.toValues, 0, toValues.length);
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            float deltaX = fromValues[0] + (toValues[0] - fromValues[0]) * interpolatedTime;
+            float deltaY = fromValues[1] + (toValues[1] - fromValues[1]) * interpolatedTime;
+            float deltaZ = fromValues[2] + (toValues[2] - fromValues[2]) * interpolatedTime;
+
+            camera.save();
+            switch (type) {
+                case TYPE_TRANSLATE:
+                    camera.translate(deltaX, deltaY, deltaZ);
+                    break;
+                case TYPE_ROTATE_X:
+                    camera.rotate(deltaX, deltaY, deltaZ);
+                    camera.translate(0.0f, 0.0f, deltaZ);
+                    centerX = 0f;
+                    centerY = view.get().getHeight() / 2f;
+                    break;
+                case TYPE_ROTATE_Y:
+                    camera.rotate(deltaX, deltaY, deltaZ);
+                    camera.translate(0.0f, 0.0f, deltaZ);
+                    centerX = view.get().getWidth() / 2f;
+                    centerY = 0f;
+                    break;
+                case TYPE_ROTATE_Z:
+                    camera.rotate(deltaX, deltaY, deltaZ);
+                    centerX = 0f;
+                    centerY = 0f;
+                    break;
+            }
+
+            camera.getMatrix(t.getMatrix());
+            camera.restore();
+
+            t.getMatrix().preTranslate(-centerX, -centerY);
+            t.getMatrix().postTranslate(-centerX, centerY);
+        }
+
+        public Idea3DRotate duration(long duration) {
+            setDuration(duration);
+            return this;
+        }
+
+        public void start(long delay) {
+            if (view == null || view.get() == null) {
+                return ;
+            }
+
+            view.get().postDelayed(() -> {
+                view.get().startAnimation(this);
+            }, delay);
+        }
+
+        @Override
+        public void cancel() {
+            super.cancel();
+            camera = null;
         }
     }
 }

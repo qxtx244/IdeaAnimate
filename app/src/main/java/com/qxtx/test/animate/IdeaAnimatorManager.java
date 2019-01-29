@@ -349,7 +349,7 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
 
     public static IdeaAnimator shake(@NonNull View target, @IdeaUtil.Orientation int orientation, int level) {
         boolean isHor = orientation == IdeaUtil.HORIZONTAL;
-        float shakeValue = (level > 10 ? 10f : (float)level) * 10f;
+        float shakeValue = (level > 100f ? 10f : (float)level) * 10f;
         String propertyName = isHor ? "translationX" : "transLationY";
         float[] values = new float[] {0f, shakeValue, -shakeValue, shakeValue, -shakeValue, 0f};
 
@@ -359,8 +359,8 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
                 .setInterpolator(new LinearInterpolator());
     }
 
-    public static IdeaAnimator swinging(@NonNull View target, float angle) {
-        return rotate(target, 300, 0f, angle, -angle, 0f)
+    public static IdeaAnimator swinging(@NonNull View target, float toAngle) {
+        return rotate(target, 300, 0f, toAngle, -toAngle, 0f)
                 .setRepeat(1, IdeaUtil.MODE_RESTART);
     }
 

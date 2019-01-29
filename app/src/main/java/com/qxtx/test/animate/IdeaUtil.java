@@ -4,6 +4,7 @@ import android.animation.ValueAnimator;
 import android.support.annotation.IntDef;
 import android.support.annotation.StringDef;
 import android.view.Gravity;
+import android.view.animation.Animation;
 import android.widget.LinearLayout;
 
 /**
@@ -40,4 +41,8 @@ public class IdeaUtil {
 
     public static final int LEVEL_MIN = 1;
     public static final int LEVEL_MAX = 10;
+
+    public static final int ABSOLUTE = Animation.ABSOLUTE;
+    public static final int RELATIVE_TO_SELF = Animation.RELATIVE_TO_SELF;
+    public static final int RELATIVE_TO_PARENT = Animation.RELATIVE_TO_PARENT;
 }
