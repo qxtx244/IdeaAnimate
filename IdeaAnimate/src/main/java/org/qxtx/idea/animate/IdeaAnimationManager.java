@@ -1,4 +1,4 @@
-package qxtx.idea.animate;
+package org.qxtx.idea.animate;
 
 import android.content.Context;
 import android.graphics.Camera;

@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.qxtx.test"
+        applicationId "org.qxtx.test"
         minSdkVersion 21
         targetSdkVersion 26
         versionCode 1

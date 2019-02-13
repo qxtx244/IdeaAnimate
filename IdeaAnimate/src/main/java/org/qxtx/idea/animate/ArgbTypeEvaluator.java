@@ -3,7 +3,7 @@
  * @Author QXTX-GOSPELL
  */
 
-package qxtx.idea.animate;
+package org.qxtx.idea.animate;
 
 import android.animation.ArgbEvaluator;
 import android.animation.TypeEvaluator;

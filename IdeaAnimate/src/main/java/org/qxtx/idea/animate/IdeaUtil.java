@@ -1,4 +1,4 @@
-package qxtx.idea.animate;
+package org.qxtx.idea.animate;
 
 import android.animation.ValueAnimator;
 import android.support.annotation.IntDef;
