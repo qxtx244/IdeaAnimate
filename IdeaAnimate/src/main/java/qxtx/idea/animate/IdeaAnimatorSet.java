@@ -1,18 +1,13 @@
-package com.qxtx.test.animate;
+package qxtx.idea.animate;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.MessageQueue;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 
 import java.lang.reflect.Field;

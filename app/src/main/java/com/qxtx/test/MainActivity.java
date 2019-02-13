@@ -1,31 +1,24 @@
 package com.qxtx.test;
 
-import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Path;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
-import android.text.Layout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.qxtx.test.animate.IdeaAnimationManager;
-import com.qxtx.test.animate.IdeaAnimator;
-import com.qxtx.test.animate.IdeaAnimatorManager;
-import com.qxtx.test.animate.IdeaUtil;
-
 import java.util.concurrent.ScheduledExecutorService;
+
+import qxtx.idea.animate.IdeaAnimationManager;
+import qxtx.idea.animate.IdeaAnimator;
+import qxtx.idea.animate.IdeaUtil;
 
 
 //金山词霸翻译测试：http://fy.iciba.com/ajax.php?a=fy&f=auto&t=auto&w=hello%20world
@@ -87,13 +80,13 @@ public class MainActivity extends Activity {
 
         btn.setOnClickListener(v -> {
 //            IdeaAnimatorManager.rolling(btn, IdeaUtil.RIGHT, 1).setDuration(1000).start();
-            float[][] pointers = new float[][] {
-                    {50f, 50f},
-                    {150f, 130f},
-                    {400f, 200f},
-                    {10f, 20f}
-            };
-            IdeaAnimationManager.door(btn, IdeaUtil.RIGHT);
+            if (count > 0) {
+                IdeaAnimationManager.doorClose(btn, IdeaUtil.TOP);
+                count = 0;
+            } else {
+                IdeaAnimationManager.doorOpen(btn, IdeaUtil.TOP);
+                count++;
+            }
         });
     }
 

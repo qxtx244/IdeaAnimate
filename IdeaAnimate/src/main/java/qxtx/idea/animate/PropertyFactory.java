@@ -1,4 +1,4 @@
-package com.qxtx.test.animate;
+package qxtx.idea.animate;
 
 /**
  * @CreateDate 2019/01/16 14:02.

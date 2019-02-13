@@ -1,0 +1,77 @@
+apply plugin: 'com.android.library'
+apply from: 'constants.gradle'
+
+android {
+    compileSdkVersion 26
+
+    defaultConfig {
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+afterEvaluate {
+    assembleDebug.doLast {
+        rename('-debug')
+        delete(aarPath() + getLibName() + '-debug' + AARsuffix())
+    }
+    assembleRelease.doLast {
+        rename('-release')
+        delete(aarPath() + getLibName() + '-release' + AARsuffix())
+    }
+}
+
+static def aarPath() {
+    return 'build/outputs/aar/'
+}
+
+static def outputsPath() {
+    return 'build/outputs/'
+}
+
+static def AARsuffix() {
+    return '.aar'
+}
+
+def getLibName() {
+    return getName()
+}
+
+def rename(String buildType) {
+    copy {
+        from(aarPath() + getName() + buildType + AARsuffix())
+        into(outputsPath()) rename {
+            getName() + '_v' + project.ext.versionName + buildType + AARsuffix()
+        }
+    }
+    copy {
+        from('build/intermediates/bundles/' + buildType.substring(1) + '/classes.jar')
+        into(outputsPath()) rename {
+            getName() + '_v' + project.ext.versionName + buildType + '.jar'
+        }
+    }
+}

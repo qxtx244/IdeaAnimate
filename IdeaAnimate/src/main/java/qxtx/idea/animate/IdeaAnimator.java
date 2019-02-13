@@ -1,4 +1,4 @@
-package com.qxtx.test.animate;
+package qxtx.idea.animate;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -15,7 +15,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Property;
+
 import junit.framework.Assert;
+
 import java.lang.reflect.Method;
 
 /** Solution method of animator. **/

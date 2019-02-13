@@ -1,4 +1,4 @@
-package com.qxtx.test.animate;
+package qxtx.idea.animate;
 
 import android.support.annotation.NonNull;
 

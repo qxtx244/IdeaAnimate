@@ -1,7 +1,8 @@
-package com.qxtx.test.animate;
+package qxtx.idea.animate;
 
 import android.content.Context;
 import android.graphics.Camera;
+import android.graphics.Matrix;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
@@ -144,6 +145,14 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
                 .setRepeat(IdeaUtil.INFINITE, IdeaUtil.MODE_REVERSE);
     }
 
+    public static void doorClose(@NonNull View target, @IdeaUtil.Direction int direction) {
+        baseDoor(target, direction, false);
+    }
+
+    public static void doorOpen(@NonNull View target, @IdeaUtil.Direction int direction) {
+        baseDoor(target, direction, true);
+    }
+
     public static IdeaAnimation flicker(@NonNull View target, int count) {
         count = count < 0 ? 0 : count * 2;
         float fromAlpha = target.getAlpha();
@@ -175,36 +184,6 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
 
     public static void lineMove(@NonNull View target, @NonNull float[]... pointers) {
         throw new IllegalStateException("Useless this method now!");
-    }
-
-    public static void door(@NonNull View target, @IdeaUtil.Direction int direction) {
-        float toValue;
-        float height = (float)target.getHeight();
-        float width = (float)target.getWidth();
-        float rotateX = target.getRotationX();
-        float rotateY = target.getRotationY();
-        String type = (direction == IdeaUtil.LEFT || direction == IdeaUtil.RIGHT) ? "y" : "x";
-        boolean isRotateX = rotateX == 0f;
-        boolean isRotateY = rotateY == 0f;
-
-        switch (direction) {
-            case IdeaUtil.LEFT:
-                toValue = isRotateY ? -180f : 0f;
-                doorMove(target, 0f, height / 2f, toValue, type);
-                return ;
-            case IdeaUtil.TOP:
-                toValue = isRotateX ? 180f : 0f;
-                doorMove(target, width / 2f, 0f, toValue, type);
-                return ;
-            case IdeaUtil.RIGHT:
-                toValue = isRotateY ? 180f : 0f;
-                doorMove(target, width, height / 2f, toValue, type);
-                return ;
-            case IdeaUtil.BOTTOM:
-                toValue = isRotateX ? -180f : 0f;
-                doorMove(target, width / 2f, height, toValue, type);
-                return ;
-        }
     }
 
     public static IdeaAnimation rotate(@NonNull View target, float toAngle,
@@ -329,8 +308,47 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
                 .setInterpolator(new LinearInterpolator());
     }
 
+    private static void baseDoor(@NonNull View target, @IdeaUtil.Direction int direction, boolean isOpen) {
+        boolean isHor = direction == IdeaUtil.LEFT || direction == IdeaUtil.RIGHT;
+        float pivotX = 0f;
+        float pivotY = 0f;
+        float toValue = 0f;
+
+        switch (direction) {
+            case IdeaUtil.LEFT:
+                toValue = isOpen ? 180f : -180f;
+                pivotX = 0f;
+                break;
+            case IdeaUtil.TOP:
+                toValue = isOpen ? -180f : 180f;
+                pivotY = 0f;
+                break;
+            case IdeaUtil.RIGHT:
+                toValue = isOpen ? -180f : 180f;
+                pivotX = (float)target.getWidth();
+                break;
+            case IdeaUtil.BOTTOM:
+                toValue = isOpen ? 180f : -180f;
+                pivotY = (float)target.getHeight();
+                break;
+        }
+
+        new Door(target, pivotX, pivotY, toValue, isHor, isOpen)
+                .duration(DEFAULT_DURATION)
+                .fillAfter(true)
+                .start(0);
+    }
+
     private static IdeaAnimationFrame baseFrame(@NonNull ImageView v) {
         return new IdeaAnimationFrame(v).setDuration(DEFAULT_DURATION);
+    }
+
+    private static IdeaAnimation baseRotate(@NonNull View v, float fromAngle, float toAngle,
+                                            int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) {
+        RotateAnimation rotate = new RotateAnimation(fromAngle, toAngle, pivotXType, pivotXValue, pivotYType, pivotYValue);
+        return new IdeaAnimation(v, rotate)
+                .setDuration(DEFAULT_DURATION)
+                .setInterpolator(new LinearInterpolator());
     }
 
     private static IdeaAnimation baseScale(@NonNull View v, float toX, float toY,
@@ -343,14 +361,6 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
                 .setInterpolator(new LinearInterpolator());
     }
 
-    private static IdeaAnimation baseRotate(@NonNull View v, float fromAngle, float toAngle,
-                                            int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) {
-        RotateAnimation rotate = new RotateAnimation(fromAngle, toAngle, pivotXType, pivotXValue, pivotYType, pivotYValue);
-        return new IdeaAnimation(v, rotate)
-                .setDuration(DEFAULT_DURATION)
-                .setInterpolator(new LinearInterpolator());
-    }
-
     private static IdeaAnimation baseTranslate(@NonNull View v,
                                                int toXType, float toX, int toYType, float toY) {
         TranslateAnimation translate = new TranslateAnimation(IdeaUtil.ABSOLUTE, v.getTranslationX(), toXType, toX,
@@ -359,17 +369,6 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         return new IdeaAnimation(v, translate)
                 .setDuration(DEFAULT_DURATION)
                 .setInterpolator(new LinearInterpolator());
-    }
-
-    private static void doorMove(@NonNull View v, float pivotX, float pivotY, float toValue, String type) {
-        v.setPivotX(pivotX);
-        v.setPivotY(pivotY);
-        boolean isHor = type.equals("y");
-        if (isHor) {
-            rotateY(v, toValue, false);
-        } else {
-            rotateX(v, toValue, false);
-        }
     }
 
     @Override
@@ -598,6 +597,68 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
 
             view.get().postDelayed(() -> {
                 view.get().startAnimation(this);
+            }, delay);
+        }
+
+        @Override
+        public void cancel() {
+            super.cancel();
+            camera = null;
+        }
+    }
+
+    private static final class Door extends Animation {
+        private Camera camera;
+        private WeakReference<View> v;
+        private float pivotX = 0f, pivotY = 0f;
+        private float toValue;
+        private boolean isHor;
+        private boolean isOpen;
+
+        public Door(View v, float pivotX, float pivotY, float toValue, boolean isHor, boolean isOpen) {
+            this.v = new WeakReference<View>(v);
+            this.isHor = isHor;
+            this.pivotX = pivotX / 2f;
+            this.pivotY = pivotY / 2f;
+            this.isOpen = isOpen;
+            camera = new Camera();
+            this.toValue = toValue;
+        }
+
+        public Door fillAfter(boolean fillAfter) {
+            setFillAfter(fillAfter);
+            return this;
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            camera.save();
+            Matrix matrix = t.getMatrix();
+            float value = (isOpen ? interpolatedTime : interpolatedTime - 1f) * toValue;
+            if (isHor) {
+                camera.rotateY(value);
+            } else {
+                camera.rotateX(value);
+            }
+            camera.getMatrix(matrix);
+            camera.restore();
+
+            t.getMatrix().preRotate(toValue, pivotX, pivotY);
+            t.getMatrix().postRotate(toValue, pivotX, pivotY);
+        }
+
+        public Door duration(long duration) {
+            setDuration(duration);
+            return this;
+        }
+
+        public void start(long delay) {
+            if (v == null || v.get() == null) {
+                return ;
+            }
+
+            v.get().postDelayed(() -> {
+                v.get().startAnimation(this);
             }, delay);
         }
 
