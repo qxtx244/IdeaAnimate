@@ -93,8 +93,7 @@ public class MainActivity extends Activity {
                     {400f, 200f},
                     {10f, 20f}
             };
-            IdeaAnimationManager.rotateY(btn, 360f, true);
-
+            IdeaAnimationManager.door(btn, IdeaUtil.RIGHT);
         });
     }
 

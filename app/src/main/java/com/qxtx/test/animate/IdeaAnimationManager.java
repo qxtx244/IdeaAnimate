@@ -226,7 +226,7 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         float[] fromValues = new float[] {target.getRotationX(), 0.0f, fromZ};
         float[] toValues = new float[] {toAngle, 0.0f, toZ};
         new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_X, fromValues, toValues)
-                .duration(DEFAULT_DURATION)
+                .duration(DEFAULT_DURATION * 2)
                 .start(0);
     }
 
@@ -234,13 +234,13 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         float fromZ = target.getTranslationZ();
         float toZ = fromZ;
         if (is3D) {
-            toZ += -target.getWidth();
+            toZ -= target.getWidth();
         }
 
-        float[] fromValues = new float[] {0.0f, target.getRotationX(), fromZ};
-        float[] toValues = new float[] {0.0f, toAngle, toZ};
+        float[] fromValues = new float[] {0f, target.getRotationY(), fromZ};
+        float[] toValues = new float[] {0f, toAngle, toZ};
        new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_Y, fromValues, toValues)
-               .duration(DEFAULT_DURATION)
+               .duration(DEFAULT_DURATION * 2)
                .start(0);
     }
 
@@ -248,7 +248,7 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         float[] fromValues = new float[] {0.0f, 0.0f, target.getRotation()};
         float[] toValues = new float[] {0.0f, 0.0f, toAngle};
         new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_Z, fromValues, toValues)
-                .duration(DEFAULT_DURATION)
+                .duration(DEFAULT_DURATION * 2)
                 .start(0);
     }
 
@@ -364,11 +364,11 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     private static void doorMove(@NonNull View v, float pivotX, float pivotY, float toValue, String type) {
         v.setPivotX(pivotX);
         v.setPivotY(pivotY);
-        boolean isHor = type.equals("x");
+        boolean isHor = type.equals("y");
         if (isHor) {
-            rotateX(v, toValue, false);
-        } else {
             rotateY(v, toValue, false);
+        } else {
+            rotateX(v, toValue, false);
         }
     }
 
@@ -543,13 +543,13 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         private float centerX, centerY;
 
         private Idea3DRotate(@NonNull View view, String type, float[] fromValues, @NonNull float[] toValues) {
-            camera = new Camera();
             this.toValues = new float[] {0f, 0f, 0f};
             this.fromValues = new float[] {0f, 0f, 0f};
             this.type = type;
             this.view = new WeakReference<View>(view);
             System.arraycopy(fromValues, 0, this.fromValues, 0, fromValues.length);
             System.arraycopy(toValues, 0, this.toValues, 0, toValues.length);
+            camera =  new Camera();
         }
 
         @Override
@@ -564,29 +564,26 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
                     camera.translate(deltaX, deltaY, deltaZ);
                     break;
                 case TYPE_ROTATE_X:
-                    camera.rotate(deltaX, deltaY, deltaZ);
+                    camera.rotate(-deltaX, 0f, 0f);
                     camera.translate(0.0f, 0.0f, deltaZ);
-                    centerX = 0f;
-                    centerY = view.get().getHeight() / 2f;
                     break;
                 case TYPE_ROTATE_Y:
-                    camera.rotate(deltaX, deltaY, deltaZ);
-                    camera.translate(0.0f, 0.0f, deltaZ);
-                    centerX = view.get().getWidth() / 2f;
-                    centerY = 0f;
+                    camera.rotate(0f, -deltaY, 0f);
+                    camera.translate(0.0f, 0.0f, interpolatedTime < 0.5f ? deltaZ : deltaZ - interpolatedTime * deltaZ);
                     break;
                 case TYPE_ROTATE_Z:
-                    camera.rotate(deltaX, deltaY, deltaZ);
-                    centerX = 0f;
-                    centerY = 0f;
+                    camera.rotate(0f, 0f, -deltaZ);
                     break;
             }
+
+            centerX = view.get().getWidth() / 2f;
+            centerY = view.get().getHeight() / 2f;
 
             camera.getMatrix(t.getMatrix());
             camera.restore();
 
             t.getMatrix().preTranslate(-centerX, -centerY);
-            t.getMatrix().postTranslate(-centerX, centerY);
+            t.getMatrix().postTranslate(centerX, centerY);
         }
 
         public Idea3DRotate duration(long duration) {
