@@ -1,28 +1,19 @@
-package org.qxtx.idea.animate;
+package org.qxtx.idea.animate.animation;
 
-import android.content.Context;
-import android.graphics.Camera;
-import android.graphics.Matrix;
-import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
-import android.view.animation.Transformation;
 import android.view.animation.TranslateAnimation;
-import android.widget.ImageView;
 
-import java.lang.ref.WeakReference;
+import org.qxtx.idea.animate.IManager;
+import org.qxtx.idea.animate.IdeaUtil;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -111,14 +102,6 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         return baseAlpha(target, target.getAlpha(), 1f);
     }
 
-    public static IdeaAnimationFrame animateFrame(@NonNull ImageView target, @NonNull Drawable... drawables) {
-        return baseFrame(target).addFrame(drawables);
-    }
-
-    public static IdeaAnimationFrame animateFrame(@NonNull ImageView target, @NonNull int... resIds) {
-        return baseFrame(target).addFrame(target.getContext(), resIds);
-    }
-
     public static IdeaAnimation bounce(@NonNull View target) {
         float jump = target.getHeight() / 2f;
         float high = jump < 50f ? 50f : jump;
@@ -204,7 +187,7 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         }
         float[] fromValues = new float[] {target.getRotationX(), 0.0f, fromZ};
         float[] toValues = new float[] {toAngle, 0.0f, toZ};
-        new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_X, fromValues, toValues)
+        new Rotate3D(target, Rotate3D.TYPE_ROTATE_X, fromValues, toValues)
                 .duration(DEFAULT_DURATION * 2)
                 .start(0);
     }
@@ -218,7 +201,7 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
 
         float[] fromValues = new float[] {0f, target.getRotationY(), fromZ};
         float[] toValues = new float[] {0f, toAngle, toZ};
-       new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_Y, fromValues, toValues)
+       new Rotate3D(target, Rotate3D.TYPE_ROTATE_Y, fromValues, toValues)
                .duration(DEFAULT_DURATION * 2)
                .start(0);
     }
@@ -226,7 +209,7 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     public static void rotateZ(@NonNull View target, float toAngle, boolean is3D) {
         float[] fromValues = new float[] {0.0f, 0.0f, target.getRotation()};
         float[] toValues = new float[] {0.0f, 0.0f, toAngle};
-        new Idea3DRotate(target, Idea3DRotate.TYPE_ROTATE_Z, fromValues, toValues)
+        new Rotate3D(target, Rotate3D.TYPE_ROTATE_Z, fromValues, toValues)
                 .duration(DEFAULT_DURATION * 2)
                 .start(0);
     }
@@ -333,14 +316,10 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
                 break;
         }
 
-        new Door(target, pivotX, pivotY, toValue, isHor, isOpen)
+        new DoorAction(target, pivotX, pivotY, toValue, isHor, isOpen)
                 .duration(DEFAULT_DURATION)
                 .fillAfter(true)
                 .start(0);
-    }
-
-    private static IdeaAnimationFrame baseFrame(@NonNull ImageView v) {
-        return new IdeaAnimationFrame(v).setDuration(DEFAULT_DURATION);
     }
 
     private static IdeaAnimation baseRotate(@NonNull View v, float fromAngle, float toAngle,
@@ -382,290 +361,5 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
         }
 
         manager = null;
-    }
-
-    public static final class IdeaAnimationFrame {
-        private AnimationDrawable animation;
-        private WeakReference<ImageView> target;
-        private List<Drawable> drawables;
-        private List<Integer> durations;
-        private Thread tRepeat;
-
-        private IdeaAnimationFrame(@NonNull ImageView target) {
-            this.target = new WeakReference<ImageView>(target);
-            animation = new AnimationDrawable();
-            this.target.get().setImageDrawable(animation);
-            drawables = new ArrayList<>();
-            durations = new ArrayList<>();
-        }
-
-        public IdeaAnimationFrame addFrame(Drawable... drawables) {
-            this.drawables.addAll(Arrays.asList(drawables));
-            return this;
-        }
-
-        public IdeaAnimationFrame addFrame(Context context, @NonNull int... resId) {
-            for (int id : resId) {
-                drawables.add(context.getResources().getDrawable(id));
-            }
-            return this;
-        }
-
-        public IdeaAnimationFrame addDuration(@NonNull int... durations) {
-            for (int i : durations) {
-                this.durations.add(i);
-            }
-            return this;
-        }
-
-        public IdeaAnimationFrame setDuration(@NonNull int... durations) {
-            int durationSize = durations.length;
-            if (durationSize != drawables.size() || durationSize != 1) {
-                Log.e(TAG, "Set duration failed. Invalid number of durations.");
-                return this;
-            }
-
-            this.durations.clear();
-            for (int i : durations) {
-                this.durations.add(i);
-            }
-            return this;
-        }
-
-        public int getDuration(int index) {
-            return durations.get(index);
-        }
-
-        public Drawable getFrame(int index) {
-            return drawables.get(index);
-        }
-
-        public int getNumOfFrames() {
-            return drawables.size();
-        }
-
-        public IdeaAnimationFrame setOneShot(boolean isOneShot) {
-            animation.setOneShot(isOneShot);
-            return this;
-        }
-
-        public IdeaAnimationFrame setVisible(boolean visible, boolean restartWhenVisible) {
-            animation.setVisible(visible, restartWhenVisible);
-            return this;
-        }
-
-        public void start() {
-            start(0, false);
-        }
-
-        public void start(long delay) {
-            start(delay, false);
-        }
-
-        public void start(boolean isReverse) {
-            start(0, isReverse);
-        }
-
-        public void start(long delay, boolean isReverse) {
-            if (durations.size() == 0) {
-                addDuration(DEFAULT_DURATION);
-            }
-
-            int drawableSize = drawables.size();
-            int durationSize = durations.size();
-            if (drawableSize != durationSize && durationSize != 1) {
-                Log.e(TAG, "Fail to start animation. Each frame of animation must be set duration!");
-                return ;
-            }
-
-            for (int i = 0; i < drawableSize; i++) {
-                int index = isReverse ? drawableSize - 1 - i : i;
-                int duration = durationSize == 1 ? durations.get(0) : durations.get(index);
-                animation.addFrame(drawables.get(index), duration);
-            }
-
-            if (target != null && target.get() != null) {
-                target.get().postDelayed(animation::start, delay);
-            }
-        }
-
-        public void startWithRepeat(int repeat) {
-            if (repeat <= 0) {
-                Log.e(TAG, "Can't to set animation repeat.");
-                return ;
-            }
-
-            int drawableSize = drawables.size();
-            setOneShot(true);
-            long nextRepeatDelay = 0;
-            for (int i = 0; i < drawableSize; i++) {
-                nextRepeatDelay += animation.getDuration(i);
-            }
-
-            final long nextRepeat = nextRepeatDelay;
-            tRepeat = new Thread(() -> {
-                for (int i = 0; i < repeat + 1; i++) {
-                    SystemClock.sleep(nextRepeat * i);
-                    target.get().post(() -> start(0, false));
-                }
-            });
-            tRepeat.start();
-        }
-
-        public void stop() {
-            animation.stop();
-            if (tRepeat != null) {
-                tRepeat.interrupt();
-                tRepeat = null;
-            }
-        }
-
-        public boolean isOneShot() {
-            return animation.isOneShot();
-        }
-
-        public boolean isRunning() {
-            return animation.isRunning();
-        }
-    }
-
-    private static final class Idea3DRotate extends Animation {
-        private static final String TYPE_TRANSLATE = "translation";
-        private static final String TYPE_ROTATE_X = "rotateX";
-        private static final String TYPE_ROTATE_Y = "rotateY";
-        private static final String TYPE_ROTATE_Z = "rotateZ";
-        private Camera camera;
-        private final String type;
-        private float[] fromValues;
-        private float[] toValues;
-        private WeakReference<View> view;
-        private float centerX, centerY;
-
-        private Idea3DRotate(@NonNull View view, String type, float[] fromValues, @NonNull float[] toValues) {
-            this.toValues = new float[] {0f, 0f, 0f};
-            this.fromValues = new float[] {0f, 0f, 0f};
-            this.type = type;
-            this.view = new WeakReference<View>(view);
-            System.arraycopy(fromValues, 0, this.fromValues, 0, fromValues.length);
-            System.arraycopy(toValues, 0, this.toValues, 0, toValues.length);
-            camera =  new Camera();
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            float deltaX = fromValues[0] + (toValues[0] - fromValues[0]) * interpolatedTime;
-            float deltaY = fromValues[1] + (toValues[1] - fromValues[1]) * interpolatedTime;
-            float deltaZ = fromValues[2] + (toValues[2] - fromValues[2]) * interpolatedTime;
-
-            camera.save();
-            switch (type) {
-                case TYPE_TRANSLATE:
-                    camera.translate(deltaX, deltaY, deltaZ);
-                    break;
-                case TYPE_ROTATE_X:
-                    camera.rotate(-deltaX, 0f, 0f);
-                    camera.translate(0.0f, 0.0f, deltaZ);
-                    break;
-                case TYPE_ROTATE_Y:
-                    camera.rotate(0f, -deltaY, 0f);
-                    camera.translate(0.0f, 0.0f, interpolatedTime < 0.5f ? deltaZ : deltaZ - interpolatedTime * deltaZ);
-                    break;
-                case TYPE_ROTATE_Z:
-                    camera.rotate(0f, 0f, -deltaZ);
-                    break;
-            }
-
-            centerX = view.get().getWidth() / 2f;
-            centerY = view.get().getHeight() / 2f;
-
-            camera.getMatrix(t.getMatrix());
-            camera.restore();
-
-            t.getMatrix().preTranslate(-centerX, -centerY);
-            t.getMatrix().postTranslate(centerX, centerY);
-        }
-
-        public Idea3DRotate duration(long duration) {
-            setDuration(duration);
-            return this;
-        }
-
-        public void start(long delay) {
-            if (view == null || view.get() == null) {
-                return ;
-            }
-
-            view.get().postDelayed(() -> {
-                view.get().startAnimation(this);
-            }, delay);
-        }
-
-        @Override
-        public void cancel() {
-            super.cancel();
-            camera = null;
-        }
-    }
-
-    private static final class Door extends Animation {
-        private Camera camera;
-        private WeakReference<View> v;
-        private float pivotX = 0f, pivotY = 0f;
-        private float toValue;
-        private boolean isHor;
-        private boolean isOpen;
-
-        public Door(View v, float pivotX, float pivotY, float toValue, boolean isHor, boolean isOpen) {
-            this.v = new WeakReference<View>(v);
-            this.isHor = isHor;
-            this.pivotX = pivotX / 2f;
-            this.pivotY = pivotY / 2f;
-            this.isOpen = isOpen;
-            camera = new Camera();
-            this.toValue = toValue;
-        }
-
-        public Door fillAfter(boolean fillAfter) {
-            setFillAfter(fillAfter);
-            return this;
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            camera.save();
-            Matrix matrix = t.getMatrix();
-            float value = (isOpen ? interpolatedTime : interpolatedTime - 1f) * toValue;
-            if (isHor) {
-                camera.rotateY(value);
-            } else {
-                camera.rotateX(value);
-            }
-            camera.getMatrix(matrix);
-            camera.restore();
-
-            t.getMatrix().preRotate(toValue, pivotX, pivotY);
-            t.getMatrix().postRotate(toValue, pivotX, pivotY);
-        }
-
-        public Door duration(long duration) {
-            setDuration(duration);
-            return this;
-        }
-
-        public void start(long delay) {
-            if (v == null || v.get() == null) {
-                return ;
-            }
-
-            v.get().postDelayed(() -> {
-                v.get().startAnimation(this);
-            }, delay);
-        }
-
-        @Override
-        public void cancel() {
-            super.cancel();
-            camera = null;
-        }
     }
 }

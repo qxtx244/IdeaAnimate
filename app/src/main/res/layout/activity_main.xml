@@ -15,7 +15,8 @@
 
     <Button
         android:id="@+id/send"
-        android:text="发送"
+        android:text="Door"
+        android:textAllCaps="false"
         android:layout_centerInParent="true"
         android:background="#00ff00"
         android:layout_width="40dp"
@@ -41,4 +42,11 @@
         android:layout_width="300dp"
         android:layout_height="300dp"
         android:src="@drawable/animate" />
+
+    <org.qxtx.idea.animate.vector.IdeaSvgPathView
+        android:id="@+id/idea"
+        android:background="#000000"
+        android:layout_alignParentBottom="true"
+        android:layout_width="400dp"
+        android:layout_height="400dp" />
 </RelativeLayout>

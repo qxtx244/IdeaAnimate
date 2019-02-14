@@ -1,6 +1,8 @@
-package org.qxtx.idea.animate;
+package org.qxtx.idea.animate.animator;
 
 import android.support.annotation.NonNull;
+
+import org.qxtx.idea.animate.IManager;
 
 import java.util.ArrayList;
 import java.util.List;

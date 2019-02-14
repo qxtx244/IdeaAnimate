@@ -13,25 +13,25 @@ import android.widget.LinearLayout;
  */
 public class IdeaUtil {
     @IntDef({LEFT, TOP, RIGHT, BOTTOM})
-    @interface Direction {}
+    public @interface Direction {}
     public static final int LEFT = Gravity.LEFT;
     public static final int TOP = Gravity.TOP;
     public static final int RIGHT = Gravity.RIGHT;
     public static final int BOTTOM = Gravity.BOTTOM;
 
     @IntDef({HORIZONTAL, VERTICAL})
-    @interface Orientation {}
+    public @interface Orientation {}
     public static final int HORIZONTAL = LinearLayout.HORIZONTAL;
     public static final int VERTICAL = LinearLayout.VERTICAL;
 
     @IntDef({MODE_RESTART, MODE_REVERSE, INFINITE})
-    @interface RepeatMode {}
+    public @interface RepeatMode {}
     public static final int MODE_RESTART = ValueAnimator.RESTART;
     public static final int MODE_REVERSE = ValueAnimator.REVERSE;
     public static final int INFINITE = ValueAnimator.INFINITE;
 
     @StringDef({TYPE_TRANSLATE, TYPE_ROTATION, TYPE_ALPHA, TYPE_SCALE})
-    @interface AnimtionType {}
+    public @interface AnimtionType {}
     public static final String TYPE_TRANSLATE = "Translate";
     public static final String TYPE_ROTATION = "Rotation";
     public static final String TYPE_ALPHA = "Alpha";

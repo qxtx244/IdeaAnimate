@@ -1,4 +1,4 @@
-package org.qxtx.idea.animate;
+package org.qxtx.idea.animate.animator;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,6 +17,9 @@ import android.util.Log;
 import android.util.Property;
 
 import junit.framework.Assert;
+
+import org.qxtx.idea.animate.IdeaUtil;
+import org.qxtx.idea.animate.PropertyFactory;
 
 import java.lang.reflect.Method;
 

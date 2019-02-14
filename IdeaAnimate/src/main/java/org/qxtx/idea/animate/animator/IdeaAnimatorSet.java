@@ -1,4 +1,4 @@
-package org.qxtx.idea.animate;
+package org.qxtx.idea.animate.animator;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -9,6 +9,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.animation.Interpolator;
+
+import org.qxtx.idea.animate.IdeaUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

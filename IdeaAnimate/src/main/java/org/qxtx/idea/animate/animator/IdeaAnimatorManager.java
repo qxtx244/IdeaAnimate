@@ -1,4 +1,4 @@
-package org.qxtx.idea.animate;
+package org.qxtx.idea.animate.animator;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -12,6 +12,11 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
+
+import org.qxtx.idea.animate.ArgbTypeEvaluator;
+import org.qxtx.idea.animate.IManager;
+import org.qxtx.idea.animate.IdeaUtil;
+import org.qxtx.idea.animate.PropertyFactory;
 
 import java.util.ArrayList;
 import java.util.List;
