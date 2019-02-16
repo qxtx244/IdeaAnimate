@@ -7,5 +7,5 @@ import android.view.View;
  * @Author QXTX-GOSPELL
  */
 
-public class IdeaTrimPathView {
+public class IdeaSvgTrimView {
 }
