@@ -27,7 +27,8 @@
         android:text="dsfjhsdiouf"
         android:layout_below="@+id/send"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
 
     <ImageView
         android:id="@+id/bgIcon"
@@ -43,7 +44,7 @@
         android:layout_height="300dp"
         android:src="@drawable/animate" />
 
-    <org.qxtx.idea.animate.vector.IdeaSvgView
+    <org.qxtx.idea.view.IdeaSvgView
         android:id="@+id/idea"
         android:background="#000000"
         android:layout_alignParentBottom="true"

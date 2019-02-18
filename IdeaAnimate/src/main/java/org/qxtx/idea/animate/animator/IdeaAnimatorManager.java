@@ -47,13 +47,13 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
     }
 
     @Override
-    public void add(IdeaAnimator animator) {
-        animatorList.add(animator);
+    public void add(IdeaAnimator idea) {
+        animatorList.add(idea);
     }
 
     @Override
-    public void remove(IdeaAnimator animator) {
-        animatorList.remove(animator);
+    public void remove(IdeaAnimator idea) {
+        animatorList.remove(idea);
     }
 
     @Override
@@ -425,6 +425,11 @@ public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
     }
 
     private static IdeaAnimator floatIdea(@NonNull Object o, long duration, @NonNull String property, float... values) {
+        if (values == null || values.length == 0) {
+            values = new float[] {0f, 360f};
+        } else if (values.length == 1) {
+            values = new float[] {0f, values[0]};
+        }
         return baseIdea(o, duration).setPropertyName(property).setFloatValues(values);
     }
 

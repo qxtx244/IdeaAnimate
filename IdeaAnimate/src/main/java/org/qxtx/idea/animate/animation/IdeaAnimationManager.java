@@ -46,13 +46,13 @@ public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     }
 
     @Override
-    public void add(IdeaAnimation animator) {
-        animationList.add(animator);
+    public void add(IdeaAnimation idea) {
+        animationList.add(idea);
     }
 
     @Override
-    public void remove(IdeaAnimation animator) {
-        animationList.remove(animator);
+    public void remove(IdeaAnimation idea) {
+        animationList.remove(idea);
     }
 
     @Override

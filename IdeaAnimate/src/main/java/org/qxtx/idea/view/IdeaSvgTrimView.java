@@ -1,6 +1,4 @@
-package org.qxtx.idea.animate.vector;
-
-import android.view.View;
+package org.qxtx.idea.view;
 
 /**
  * @CreateDate 2019/02/14 14:27.

@@ -49,13 +49,13 @@ public class IdeaAnimatorSetManager implements IManager<IdeaAnimatorSet> {
     }
 
     @Override
-    public void add(IdeaAnimatorSet ideaSet) {
-        setList.add(ideaSet);
+    public void add(IdeaAnimatorSet idea) {
+        setList.add(idea);
     }
 
     @Override
-    public void remove(IdeaAnimatorSet ideaSet) {
-        setList.remove(ideaSet);
+    public void remove(IdeaAnimatorSet idea) {
+        setList.remove(idea);
     }
 
     @Override

@@ -10,9 +10,9 @@ import java.util.List;
  */
 
 public interface IManager<T> {
-    void add(T animator);
+    void add(T idea);
 
-    void remove(T animator);
+    void remove(T idea);
 
     void remove(@NonNull String tag);
 
