@@ -8,10 +8,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PathMeasure;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 
 import org.qxtx.idea.animate.vector.IdeaSvgManager;
 
@@ -23,20 +25,25 @@ import java.util.LinkedHashMap;
  * @Author QXTX-GOSPELL
  */
 
-public class IdeaSvgView extends SvgBaseView {
+public class IdeaSvgView extends View {
     private static final String TAG = "IdeaSvgPathAnimate";
 
     private static final String DEFAULT_COLOR = "#1E90FF";
     private static final long DEFAULT_DURATION = 500;
     private static final float DEFAULT_STROKE_WIDTH = 3f;
+    private static final int MODE_SVG = 0;
+    private static final int MODE_TRIM = 1;
 
     private String tag;
     private LinkedHashMap<String, float[]> startSvg;
     private LinkedHashMap<String, float[]> endSvg;
     private float[] firstPointer;
+    private int mode;
     private Path path;
+    private Path trimPath;
     private Paint paint;
     private boolean isFillPath;
+    private long duration;
     private int lineColor;
     private int fillColor;
     private float strokeWidth;
@@ -63,17 +70,48 @@ public class IdeaSvgView extends SvgBaseView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (path != null) {
-            Paint.Style useStyle = isFillPath ? Paint.Style.FILL_AND_STROKE : Paint.Style.STROKE;
-            paint.setStyle(useStyle);
-            //需要考虑居中，修正图形的首个描点偏移
-            canvas.translate(getWidth() / 2f, getHeight() / 2f);
+        //需要考虑居中，修正图形的首个描点偏移
+        canvas.translate(getWidth() / 2f, getHeight() / 2f);
+
+        if (path != null && (mode != MODE_TRIM || isFillPath)) {
+            paint.setStyle(isFillPath ? Paint.Style.FILL : Paint.Style.STROKE);
+            paint.setColor(isFillPath ? fillColor : lineColor);
             canvas.drawPath(path, paint);
+        }
+
+        //额外绘制1：边缘路径动画
+        if (mode == MODE_TRIM && trimPath != null) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(lineColor);
+            canvas.drawPath(trimPath, paint);
         }
     }
 
-    public LinkedHashMap<String, float[]> getSvg() {
+    public LinkedHashMap<String, float[]> getSvgMap() {
         return startSvg;
+    }
+
+    public String getSvgString() {
+        StringBuilder curPath = new StringBuilder();
+
+        for (String key : startSvg.keySet()) {
+            float[] values = startSvg.get(key);
+            curPath.append(key.charAt(0));
+            for (int i = 0; i < values.length; i++) {
+                curPath.append(values[i]);
+                if (i != values.length - 1) {
+                    curPath.append(",");
+                } else {
+                    curPath.append(" ");
+                }
+            }
+        }
+
+        return curPath.toString();
+    }
+
+    public Path getPath() {
+        return path;
     }
 
     public void show(@NonNull String svgPath, boolean isFillPath) {
@@ -84,6 +122,7 @@ public class IdeaSvgView extends SvgBaseView {
             paint.setColor(lineColor);
         }
 
+        mode = MODE_SVG;
         startSvg = saveSvg(svgPath);
         path = createPath(startSvg);
         postInvalidate();
@@ -94,78 +133,37 @@ public class IdeaSvgView extends SvgBaseView {
     }
 
     /**
-     *
-     * @param toSvg It must be String or LinkedHashMap<String,float[]>. String type that is about with svg path just like
-     *                "M0,0 L3, 4 L5, 6z".
-     *               And LinkedHashMap<String, float[]> type that is about with svg key-value just like
-     *               "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}"
-     * @param duration
-     * @param delay
+     * @param toSvg It is data string like as "M0,0 L3, 4 L5, 6z".
      */
-    public void startAnimation(@NonNull Object toSvg, long duration, long delay) {
-        if (toSvg instanceof String) {
-            endSvg = saveSvg((String)toSvg);
-        } else if (toSvg instanceof LinkedHashMap) {
-            endSvg = endSvg == null ? new LinkedHashMap<>() : endSvg;
-            endSvg.putAll((LinkedHashMap<String, float[]>)toSvg);
-        }
-
-        if (endSvg == null || (endSvg.size() != startSvg.size())) {
-            Log.e(TAG, "Unable to start animation, different the keyword of fromPath and toPath");
-            return ;
-        }
-
-        LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
-
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
-        valueAnimator.addUpdateListener(animation -> {
-            float fraction = animation.getAnimatedFraction();
-            newSvg.clear();
-            Iterator<String> key = startSvg.keySet().iterator();
-            Iterator<float[]> fromValue = startSvg.values().iterator();
-            Iterator<float[]> toValue = endSvg.values().iterator();
-            while (key.hasNext()) {
-                float[] from = fromValue.next();
-                float[] to = toValue.next();
-                float[] newValue = new float[from.length];
-                for (int i = 0; i < newValue.length; i++) {
-                    newValue[i] = from[i] + (to[i] - from[i]) * fraction;
-                }
-                newSvg.put(key.next(), newValue);
-            }
-
-            path = createPath(newSvg);
-            postInvalidateDelayed(delay);
-        });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                startSvg.clear();
-                startSvg.putAll(endSvg);
-                endSvg.clear();
-                setClickable(true);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                super.onAnimationCancel(animation);
-                startSvg.clear();
-                startSvg.putAll(endSvg);
-                endSvg.clear();
-                setClickable(true);
-            }
-        });
-        valueAnimator.start();
-        setClickable(false);
+    public void startAnimation(@NonNull String toSvg) {
+        endSvg = saveSvg(toSvg);
+        svgAnimation();
     }
 
-    public void startAnimation(@NonNull Object toSvg, long duration) {
-        startAnimation(toSvg, duration, 0);
+    /**
+     * @param toSvg It is data string like as "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}".
+     */
+    public void startAnimation(LinkedHashMap<String, float[]> toSvg) {
+        endSvg = endSvg == null ? new LinkedHashMap<>() : endSvg;
+        endSvg.putAll(toSvg);
+        svgAnimation();
     }
 
-    public void startAnimation(@NonNull Object toSvg) {
-        startAnimation(toSvg, DEFAULT_DURATION);
+    public void startTrimAnimation(int dstLen) {
+        trimAnimation(dstLen, false);
+    }
+
+    public void startTrimAnimation(boolean isReverse) {
+        trimAnimation(-1, isReverse);
+    }
+
+    public void startTrimAnimation() {
+        startTrimAnimation(false);
+    }
+
+    public IdeaSvgView setDuration(long duration) {
+        this.duration = duration;
+        return this;
     }
 
     public IdeaSvgView setFillColor(int fillColor) {
@@ -287,6 +285,7 @@ public class IdeaSvgView extends SvgBaseView {
     }
 
     private void init() {
+        duration = DEFAULT_DURATION;
         strokeWidth = DEFAULT_STROKE_WIDTH;
         lineColor = Color.parseColor(DEFAULT_COLOR);
         fillColor = Color.parseColor(DEFAULT_COLOR);
@@ -364,5 +363,89 @@ public class IdeaSvgView extends SvgBaseView {
         }
 
         return map;
+    }
+
+    private void svgAnimation() {
+        if (endSvg == null || (endSvg.size() != startSvg.size())) {
+            Log.e(TAG, "Unable to start animation, different the keyword of fromPath and toPath");
+            return ;
+        }
+
+        mode = MODE_SVG;
+        LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
+        valueAnimator.addUpdateListener(animation -> {
+            float fraction = animation.getAnimatedFraction();
+            newSvg.clear();
+            Iterator<String> key = startSvg.keySet().iterator();
+            Iterator<float[]> fromValue = startSvg.values().iterator();
+            Iterator<float[]> toValue = endSvg.values().iterator();
+            while (key.hasNext()) {
+                float[] from = fromValue.next();
+                float[] to = toValue.next();
+                float[] newValue = new float[from.length];
+                for (int i = 0; i < newValue.length; i++) {
+                    newValue[i] = from[i] + (to[i] - from[i]) * fraction;
+                }
+                newSvg.put(key.next(), newValue);
+            }
+
+            path = createPath(newSvg);
+            postInvalidate();
+        });
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                onEnd();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+                onEnd();
+            }
+
+            private void onEnd() {
+                startSvg.clear();
+                startSvg.putAll(endSvg);
+                endSvg.clear();
+                setClickable(true);
+            }
+        });
+        valueAnimator.start();
+        setClickable(false);
+    }
+
+    private void trimAnimation(int dstLen, boolean isReverse) {
+        Path dst = new Path();
+        /* Order to official document, it can be make animation workaround even sdk version number
+           below to 19 and display on the hardware-accelerated canvas. */
+        dst.rLineTo(0f, 0f);
+
+        PathMeasure pathMeasure = new PathMeasure();
+        pathMeasure.setPath(path, false);
+        mode = MODE_TRIM;
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
+        valueAnimator.addUpdateListener(animator -> {
+            dst.reset();
+            float fraction = animator.getAnimatedFraction();
+            float pathLen = pathMeasure.getLength();
+            float startD;
+            float endD;
+            if (dstLen <= 0) { //fully trim
+                startD = 0f;
+                endD = (isReverse ? (1f - fraction) : fraction) * pathLen;
+            } else {
+                startD = pathLen * fraction;
+                endD = startD + dstLen;
+            }
+
+            if (pathMeasure.getSegment(startD, endD, dst, true)) {
+                trimPath = dst;
+                postInvalidate();
+            }
+        });
+        valueAnimator.start();
     }
 }

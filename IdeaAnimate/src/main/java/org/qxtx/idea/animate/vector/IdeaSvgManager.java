@@ -5,7 +5,6 @@ import android.util.Log;
 
 import org.qxtx.idea.animate.IManager;
 import org.qxtx.idea.view.IdeaSvgView;
-import org.qxtx.idea.view.SvgBaseView;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,14 +16,14 @@ import java.util.List;
  * @Author QXTX-GOSPELL
  */
 
-public class IdeaSvgManager implements IManager<SvgBaseView> {
+public class IdeaSvgManager implements IManager<IdeaSvgView> {
     public static final String TAG = "IdeaSvgManager";
     private static final long DEFAULT_DURATION = 500;
     private static final long DEFAULT_DELAY = 1000;
     private static final String DEFAULT_COLOR = "#1E90FF";
     private static final float DEFAULT_STROKE_WIDTH = 3f;
     public static IdeaSvgManager manager;
-    public List<SvgBaseView> list;
+    public List<IdeaSvgView> list;
 
     private IdeaSvgManager() {
         list = new ArrayList<>();
@@ -60,10 +59,10 @@ public class IdeaSvgManager implements IManager<SvgBaseView> {
             String tag = target.getTag().toString();
             if (!tag.endsWith("arrows")) {
                 target.setTag(target.getTag() + "arrows");
-                target.startAnimation(SVG_ARROWS, DEFAULT_DURATION);
+                target.startAnimation(SVG_ARROWS);
             } else {
                 target.setTag(tag.substring(0, tag.length() - 6));
-                target.startAnimation(SVG_PAR, DEFAULT_DURATION);
+                target.startAnimation(SVG_PAR);
             }
         });
     }
@@ -74,7 +73,7 @@ public class IdeaSvgManager implements IManager<SvgBaseView> {
             return ;
         }
 
-        LinkedHashMap<String, float[]> svg = target.getSvg();
+        LinkedHashMap<String, float[]> svg = target.getSvgMap();
         LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
         Iterator<float[]> iteratorV = svg.values().iterator();
         for (String key : svg.keySet()) {
@@ -89,13 +88,25 @@ public class IdeaSvgManager implements IManager<SvgBaseView> {
         target.startAnimation(newSvg);
     }
 
+    public static void trimOneDst(@NonNull IdeaSvgView target, int dstLen) {
+        target.startTrimAnimation(dstLen);
+    }
+
+    public static void trimFully(@NonNull IdeaSvgView target, boolean isReverse) {
+        if (isReverse) {
+            target.startTrimAnimation(true);
+        } else {
+            target.startTrimAnimation(false);
+        }
+    }
+
     @Override
-    public void add(SvgBaseView idea) {
+    public void add(IdeaSvgView idea) {
         list.add(idea);
     }
 
     @Override
-    public void remove(SvgBaseView idea) {
+    public void remove(IdeaSvgView idea) {
         list.remove(idea);
     }
 
@@ -120,14 +131,14 @@ public class IdeaSvgManager implements IManager<SvgBaseView> {
     }
 
     @Override
-    public List<SvgBaseView> getAnimateList() {
+    public List<IdeaSvgView> getAnimateList() {
         return list;
     }
 
     @Override
-    public List<SvgBaseView> get(@NonNull String tag) {
-        List<SvgBaseView> ideas = new ArrayList<>();
-        for (SvgBaseView i : ideas) {
+    public List<IdeaSvgView> get(@NonNull String tag) {
+        List<IdeaSvgView> ideas = new ArrayList<>();
+        for (IdeaSvgView i : ideas) {
             if (i.getTag().equals(tag)) {
                 ideas.add(i);
             }
