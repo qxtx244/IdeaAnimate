@@ -3,14 +3,14 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
 
-    signingConfigs {
-        testSignatrue {
-            keyAlias 'testjks'
-            keyPassword 'lyx19951'
-            storeFile file('../TestJks.jks')
-            storePassword 'lyx19951'
-        }
-    }
+//    signingConfigs {
+//        testSignatrue {
+//            keyAlias 'testjks'
+//            keyPassword 'lyx19951'
+//            storeFile file('../TestJks.jks')
+//            storePassword 'lyx19951'
+//        }
+//    }
 
     defaultConfig {
         applicationId "org.qxtx.test"
@@ -23,9 +23,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            signingConfig signingConfigs.testSignatrue
         }
     }
 
