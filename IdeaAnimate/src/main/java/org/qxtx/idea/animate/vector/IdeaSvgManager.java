@@ -52,6 +52,14 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
             "M10,30 L60,30 L60,40 L10,40 Z " +
             "M12.072,27.928 L47.072,62.928 L40,70 L5,35 Z";
 
+    public static void show(@NonNull IdeaSvgView target, String svgPath) {
+        show(target, svgPath, false);
+    }
+
+    public static void show(@NonNull IdeaSvgView target, String svgPath, boolean isReverse) {
+        target.show(svgPath, isReverse);
+    }
+
     public static void arrows(@NonNull IdeaSvgView target) {
         target.show(SVG_PAR, true);
         target.setTag("menu");

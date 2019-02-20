@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
-    private static final long DEFAULT_DURATION = 500;
     private static final String TAG = "IdeaAnimatorManager";
+    private static final long DEFAULT_DURATION = 500;
     private static IdeaAnimatorManager manager;
     private List<IdeaAnimator> animatorList;
 

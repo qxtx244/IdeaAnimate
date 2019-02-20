@@ -137,5 +137,4 @@
 
 #-----------其它自定义规则----------------------
 -keepattributes Exceptions
--keepattributes Exceptions
 #----------------注意不能混淆带Class.forName()的类或方法名，也不能混淆加载so的类
