@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import org.qxtx.idea.animate.IdeaUtil;
 import org.qxtx.idea.animate.animation.IdeaAnimationManager;
+import org.qxtx.idea.animate.vector.IdeaSvgManager;
 import org.qxtx.idea.view.IdeaSvgView;
 
 public class MainActivity extends Activity {
@@ -47,7 +48,7 @@ public class MainActivity extends Activity {
 //                IdeaSvgManager.scale(ideaVector, 5f);
 //                ideaVector.setLineColor(Color.RED).setStrokeWidth(6f);
 //                ideaVector.startTrimAnimation(60);
-                ideaVector.setDuration(1000).startTrimAnimation(true);
+                ideaVector.setDuration(1000).startTrimAnimation(false);
 
                 count = 0;
             } else {
@@ -56,7 +57,7 @@ public class MainActivity extends Activity {
 //                        "c-6.7,-17.32,-25.47,-30,-45,-30 C89.57,95,70,114.32,70,140 " +
 //                        "c0,35.3,37.93,62.57,90,115 c52.07,-52.42,90,-79.7,90,-115 " +
 //                        "C250,114.32,230.43,95,205,95z", false);
-//                ideaVector.show(IdeaSvgManager.SVG_HEART);
+                ideaVector.show(IdeaSvgManager.SVG_ARROWS, false);
                 count++;
             }
         });

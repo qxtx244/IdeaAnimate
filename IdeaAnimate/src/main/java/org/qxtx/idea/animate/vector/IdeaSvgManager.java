@@ -96,7 +96,7 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         target.startAnimation(newSvg);
     }
 
-    public static void trimOneDst(@NonNull IdeaSvgView target, int dstLen) {
+    public static void trimDst(@NonNull IdeaSvgView target, int dstLen) {
         target.startTrimAnimation(dstLen);
     }
 
