@@ -5,7 +5,7 @@ import org.qxtx.idea.animate.animator.IdeaAnimatorManager;
 import org.qxtx.idea.animate.circularReveal.IdeaCircularRevealManager;
 import org.qxtx.idea.animate.frame.IdeaFrameManager;
 import org.qxtx.idea.animate.vector.IdeaSvgManager;
-import org.qxtx.idea.view.IdeaSvgView;
+import org.qxtx.idea.animate.vector.IdeaSvgView;
 
 /**
  * Get anyone of animate simply.

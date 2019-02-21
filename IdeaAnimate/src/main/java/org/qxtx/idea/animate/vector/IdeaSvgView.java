@@ -1,4 +1,4 @@
-package org.qxtx.idea.view;
+package org.qxtx.idea.animate.vector;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -14,8 +14,6 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-
-import org.qxtx.idea.animate.vector.IdeaSvgManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,6 +37,8 @@ import java.util.List;
  *   1、每个键值对为一条路径的完整数据，key为【keyword(+其它数据)】的字符串，value为【float[]数组】；
  *   2、以key为【m/M(+其它数据)】的键值对开始；
  *   3、最后一个键值对的key必须为【z/Z(+其它数据)】，此键值对的value不能为【null】。
+ *
+ *   备注：view的tag用来标记view此时的图形状态
  */
 
 public class IdeaSvgView extends View {
@@ -109,27 +109,17 @@ public class IdeaSvgView extends View {
         }
     }
 
+    /**
+     * @return This LinkedHashMap was a deep-copy from {@link #startSvg} for protect this class member
+     */
     public LinkedHashMap<String, float[]> getSvgMap() {
-        return startSvg;
+        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
+        map.putAll(startSvg);
+        return map;
     }
 
     public String getSvgString() {
-        StringBuilder curPath = new StringBuilder();
-
-        for (String key : startSvg.keySet()) {
-            float[] values = startSvg.get(key);
-            curPath.append(key.charAt(0));
-            for (int i = 0; i < values.length; i++) {
-                curPath.append(values[i]);
-                if (i != values.length - 1) {
-                    curPath.append(",");
-                } else {
-                    curPath.append(" ");
-                }
-            }
-        }
-
-        return curPath.toString();
+        return Map2String(startSvg);
     }
 
     public Path getPath() {
@@ -146,7 +136,7 @@ public class IdeaSvgView extends View {
         }
 
         mode = MODE_SVG;
-        startSvg = saveSvg(svgPath);
+        startSvg =  String2Map(svgPath);
         path = createPath(startSvg);
         postInvalidate();
     }
@@ -159,7 +149,7 @@ public class IdeaSvgView extends View {
      * @param toSvg It is data string like as "M0,0 L3, 4 L5, 6z".
      */
     public void startAnimation(@NonNull String toSvg) {
-        endSvg = saveSvg(toSvg);
+        endSvg =  String2Map(toSvg);
         svgAnimation();
     }
 
@@ -326,7 +316,7 @@ public class IdeaSvgView extends View {
         return endIndex;
     }
 
-    private LinkedHashMap<String, float[]> saveSvg(String svgData) {
+    public LinkedHashMap<String, float[]>  String2Map(String svgData) {
         //也许使用正则负担也不大
         svgData = svgData
                 .trim()
@@ -379,6 +369,24 @@ public class IdeaSvgView extends View {
         }
 
         return map;
+    }
+    
+    public String Map2String(LinkedHashMap<String, float[]> svgData) {
+        StringBuilder curPath = new StringBuilder();
+
+        for (String key : svgData.keySet()) {
+            float[] values = svgData.get(key);
+            curPath.append(key.charAt(0));
+            for (int i = 0; i < values.length; i++) {
+                curPath.append(values[i]);
+                if (i != values.length - 1) {
+                    curPath.append(",");
+                } else {
+                    curPath.append(" ");
+                }
+            }
+        }
+        return curPath.toString();
     }
 
     private void svgAnimation() {
@@ -475,11 +483,11 @@ public class IdeaSvgView extends View {
         animators.start();
     }
 
-    private Path[] splitPath() {
+    Path[] splitPath() {
         List<String> subPath = new ArrayList<>();
 
         //Svg map path -> String[] path，每一条闭合的路径
-        String svgPath = getSvgString();
+        String svgPath = Map2String(startSvg);
         int startPos = 0;
         for (int i = 0; i < svgPath.length(); i++) {
             if (svgPath.charAt(i) == 'z' || svgPath.charAt(i) == 'Z') {
@@ -495,13 +503,12 @@ public class IdeaSvgView extends View {
         List<LinkedHashMap<String, float[]>> maps = new ArrayList<>();
         for (int i = 0; i < subPath.size(); i++) {
             String data = subPath.get(i);
-            maps.add(saveSvg(data));
+            maps.add(String2Map(data));
         }
 
         /*
          * 需要将起始描点类型从【m】转换为【M】
          * 如果起始为‘m’，则替换此键的值为【上一个坐标值】 + 【下一个坐标值】，
-         * 还要修复紧靠m坐标之后的h/v相对坐标值
          */
         for (int i = 0; i < maps.size(); i++) {
             LinkedHashMap<String, float[]> curMap = maps.get(i);
