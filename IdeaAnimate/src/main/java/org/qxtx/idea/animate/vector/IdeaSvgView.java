@@ -24,6 +24,9 @@ import java.util.List;
  * @CreateDate 2019/02/14 14:26.
  * @Author QXTX-GOSPELL
  *
+ * IdeaSvgView在同一时间仅支持一个动画的播放，如果多个动画在同一时间段被要求播放，则只播放第一个动画，其他动画不被执行；
+ * 例外的是，裁剪动画可与svg动画同时执行
+ *
  * 支持的keyword（包括小写）：M L Q C H V A S T Z
  *
  * String格式路径要求：
@@ -63,6 +66,7 @@ public class IdeaSvgView extends View {
     private int lineColor;
     private int fillColor;
     private float strokeWidth;
+    private ValueAnimator animator;
 
     public IdeaSvgView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -86,7 +90,7 @@ public class IdeaSvgView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        //需要考虑居中，修正图形的首个描点偏移
+        //Center the svg(but it look like work bad)
         canvas.translate(getWidth() / 2f, getHeight() / 2f);
 
         if (path != null && (mode != MODE_TRIM || isFillPath)) {
@@ -95,7 +99,7 @@ public class IdeaSvgView extends View {
             canvas.drawPath(path, paint);
         }
 
-        //额外绘制1：边缘路径动画
+        //Extra1：trim dst
         if (mode == MODE_TRIM && trimPath != null) {
             paint.setStyle(Paint.Style.STROKE);
             paint.setColor(lineColor);
@@ -110,12 +114,11 @@ public class IdeaSvgView extends View {
     }
 
     /**
+     * pullAll() only can be make a deep-copy with base-value but object.
      * @return This LinkedHashMap was a deep-copy from {@link #startSvg} for protect this class member
      */
     public LinkedHashMap<String, float[]> getSvgMap() {
-        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
-        map.putAll(startSvg);
-        return map;
+        return deepCopyMap(startSvg);
     }
 
     public String getSvgString() {
@@ -127,7 +130,16 @@ public class IdeaSvgView extends View {
     }
 
     public void show(@NonNull String svgPath, boolean isFillPath) {
+        if (animator != null) {
+            Log.e(TAG, "Need to show a svg but animation is running, so stop the animation!");
+            animator.cancel();
+            animator = null;
+        }
+
+        endSvg = null;
         firstPointer = null;
+        mode = MODE_SVG;
+
         this.isFillPath = isFillPath;
         if (isFillPath) {
             paint.setColor(fillColor);
@@ -135,8 +147,7 @@ public class IdeaSvgView extends View {
             paint.setColor(lineColor);
         }
 
-        mode = MODE_SVG;
-        startSvg =  String2Map(svgPath);
+        startSvg = String2Map(svgPath);
         path = createPath(startSvg);
         postInvalidate();
     }
@@ -146,10 +157,15 @@ public class IdeaSvgView extends View {
     }
 
     /**
-     * @param toSvg It is data string like as "M0,0 L3, 4 L5, 6z".
+     * @param toSvg It is data string like as "M0,0 L3,4 L5,6 z".
      */
     public void startAnimation(@NonNull String toSvg) {
-        endSvg =  String2Map(toSvg);
+        if (animator != null) {
+            Log.e(TAG, "IdeaSvgView only can run one animate in the same time! wait for current animation?");
+            return ;
+        }
+
+        endSvg = String2Map(toSvg);
         svgAnimation();
     }
 
@@ -157,8 +173,16 @@ public class IdeaSvgView extends View {
      * @param toSvg It is data string like as "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}".
      */
     public void startAnimation(LinkedHashMap<String, float[]> toSvg) {
+        if (animator != null) {
+            Log.e(TAG, "IdeaSvgView only can run one animate in the same time! wait for current animation?");
+            return ;
+        }
+
         endSvg = endSvg == null ? new LinkedHashMap<>() : endSvg;
-        endSvg.putAll(toSvg);
+        endSvg.clear();
+        endSvg = deepCopyMap(toSvg);
+//        endSvg.putAll(toSvg); //Should to take a deep-copy
+
         svgAnimation();
     }
 
@@ -397,8 +421,8 @@ public class IdeaSvgView extends View {
 
         mode = MODE_SVG;
         LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
-        valueAnimator.addUpdateListener(animation -> {
+        animator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
+        animator.addUpdateListener(animation -> {
             float fraction = animation.getAnimatedFraction();
             newSvg.clear();
             Iterator<String> key = startSvg.keySet().iterator();
@@ -417,28 +441,25 @@ public class IdeaSvgView extends View {
             path = createPath(newSvg);
             postInvalidate();
         });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
+        animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
                 onEnd();
             }
-
             @Override
             public void onAnimationCancel(Animator animation) {
-                super.onAnimationCancel(animation);
                 onEnd();
             }
 
             private void onEnd() {
                 startSvg.clear();
-                startSvg.putAll(endSvg);
+                startSvg = deepCopyMap(endSvg);
+//                startSvg.putAll(endSvg); //Should to make a deep-copy
                 endSvg.clear();
-                setClickable(true);
+                animator = null;
             }
         });
-        valueAnimator.start();
-        setClickable(false);
+        animator.start();
     }
 
     /**
@@ -483,7 +504,7 @@ public class IdeaSvgView extends View {
         animators.start();
     }
 
-    Path[] splitPath() {
+    private Path[] splitPath() {
         List<String> subPath = new ArrayList<>();
 
         //Svg map path -> String[] path，每一条闭合的路径
@@ -527,5 +548,20 @@ public class IdeaSvgView extends View {
         }
 
         return paths;
+    }
+
+    private LinkedHashMap<String, float[]> deepCopyMap(LinkedHashMap<String, float[]> fromMap) {
+        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
+        Iterator<String> iteratorK = fromMap.keySet().iterator();
+        Iterator<float[]> iteratorV = fromMap.values().iterator();
+        while (iteratorK.hasNext()) {
+            String key = iteratorK.next();
+            float[] v = iteratorV.next();
+            float[] values = new float[v.length];
+            System.arraycopy(v, 0, values, 0, v.length);
+            map.put(key, values);
+        }
+
+        return map;
     }
 }

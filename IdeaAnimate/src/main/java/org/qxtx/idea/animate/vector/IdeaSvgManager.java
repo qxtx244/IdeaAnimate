@@ -1,7 +1,5 @@
 package org.qxtx.idea.animate.vector;
 
-import android.animation.ValueAnimator;
-import android.renderscript.Sampler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -50,6 +48,14 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         target.show(svgPath, isReverse);
     }
 
+    public static void changeTo(@NonNull IdeaSvgView target, String toSvg) {
+        target.startAnimation(toSvg);
+    }
+
+    public static void changeTo(@NonNull IdeaSvgView target, LinkedHashMap<String, float[]> toSvg) {
+        target.startAnimation(toSvg);
+    }
+
     public static void arrows(@NonNull IdeaSvgView target) {
         target.show(IdeaUtil.SVG_PAR, true);
         target.setTag("menu");
@@ -67,7 +73,7 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
 
     public static void scale(@NonNull IdeaSvgView target, float scale) {
         if (scale < 0f) {
-            Log.e(TAG, "Value of scale must be postive.");
+            Log.e(TAG, "Value of scale must be positive.");
             return ;
         }
 
@@ -109,9 +115,24 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
      * @param useAnimate
      */
     public static void zero2Nine(@NonNull IdeaSvgView target, int num, boolean useAnimate) {
-//        target.setTag("numberMode" + num + target.getTag());
+        target.setTag("numberMode" + num + "" + target.getTag());
         switch (num) {
             case 0:
+                LinkedHashMap<String, float[]> map = target.getSvgMap();
+                Iterator<String> iteratorK = map.keySet().iterator();
+                Iterator<float[]> iteratorV = map.values().iterator();
+                while (iteratorK.hasNext()) {
+                    char key = iteratorK.next().charAt(0);
+                    if (key == 'Z' || key == 'z') {
+                        break;
+                    }
+
+                    float[] values = iteratorV.next();
+                    for (int i = 0; i < values.length; i++) {
+                        values[i] = 0f;
+                    }
+                }
+                changeTo(target, map);
                 break;
             case 1:
                 break;
