@@ -123,6 +123,7 @@ public class IdeaSvgView extends View {
     }
 
     public void show(@NonNull String svgPath, boolean isFillPath) {
+        firstPointer = null;
         this.isFillPath = isFillPath;
         if (isFillPath) {
             paint.setColor(fillColor);
@@ -198,42 +199,35 @@ public class IdeaSvgView extends View {
         Path path = new Path();
         float[] values;
         for (String key : svgMap.keySet()) {
+            values = svgMap.get(key);
             char svgKey = key.charAt(0);
             switch (svgKey) {
                 case 'M':
-                    values = svgMap.get(key);
                     path.moveTo(values[0], values[1]);
                     break;
                 case 'm':
-                    values = svgMap.get(key);
                     path.rMoveTo(values[0], values[1]);
                     break;
                 case 'L':
-                    values = svgMap.get(key);
                     path.lineTo(values[0], values[1]);
                     break;
                 case 'l':
-                    values = svgMap.get(key);
                     path.rLineTo(values[0], values[1]);
                     break;
                 case 'C':
                 case 'S':
-                    values = svgMap.get(key);
                     path.cubicTo(values[0], values[1], values[2], values[3], values[4], values[5]);
                     break;
                 case 'c':
                 case 's':
-                    values = svgMap.get(key);
                     path.rCubicTo(values[0], values[1], values[2], values[3], values[4], values[5]);
                     break;
                 case 'Q':
                 case 'T':
-                    values = svgMap.get(key);
                     path.quadTo(values[0], values[1], values[2], values[3]);
                     break;
                 case 'q':
                 case 't':
-                    values = svgMap.get(key);
                     path.rQuadTo(values[0], values[1], values[2], values[3]);
                     break;
                 case 'Z':
@@ -244,18 +238,19 @@ public class IdeaSvgView extends View {
 //                    path.arcTo();
                     break;
                 case 'H':
-                case 'V':
-                    values = svgMap.get(key);
-                    path.lineTo(values[0], values[1]);
+                    path.lineTo(values[0], 0f);
                     break;
                 case 'h':
+                    path.rLineTo(values[0], 0f);
+                    break;
+                case 'V':
+                    path.lineTo(0f, values[1]);
+                    break;
                 case 'v':
-                    values = svgMap.get(key);
-                    path.rLineTo(values[0], values[1]);
+                    path.rLineTo(0f, values[1]);
                     break;
             }
         }
-
         return path;
     }
 
@@ -275,7 +270,7 @@ public class IdeaSvgView extends View {
         float[] values = new float[arraySize];
         endIndex = parseValues(svgData, values, startIndex);
 
-        if (map.size() == 0) {
+        if (map.size() == 0 && firstPointer == null) {
             firstPointer = new float[2];
             System.arraycopy(values, 0, firstPointer, 0, values.length);
         }
@@ -469,19 +464,45 @@ public class IdeaSvgView extends View {
     private Path[] splitPath() {
         List<String> subPath = new ArrayList<>();
 
+        //Svg map path -> String[] path，每一条闭合的路径
         String svgPath = getSvgString();
         int startPos = 0;
         for (int i = 0; i < svgPath.length(); i++) {
             if (svgPath.charAt(i) == 'z' || svgPath.charAt(i) == 'Z') {
-                subPath.add(svgPath.substring(startPos, i + 1));
+                String dstPath = svgPath.substring(startPos, i + 1);
+                subPath.add(dstPath);
                 startPos = i + 1;
             }
         }
 
-        Path[] paths = new Path[subPath.size()];
+        //String路径 -> HashMap路径
+        //由于之前已经调整好描点位置，因此不需要再考虑起始描点的问题
+        firstPointer = new float[2];
+        List<LinkedHashMap<String, float[]>> maps = new ArrayList<>();
         for (int i = 0; i < subPath.size(); i++) {
             String data = subPath.get(i);
-            paths[i] = createPath(saveSvg(data));
+            maps.add(saveSvg(data));
+        }
+
+        /*
+         * 需要将起始描点类型从【m】转换为【M】
+         * 如果起始为‘m’，则替换此键的值为【上一个坐标值】 + 【下一个坐标值】，
+         * 还要修复紧靠m坐标之后的h/v相对坐标值
+         */
+        for (int i = 0; i < maps.size(); i++) {
+            LinkedHashMap<String, float[]> curMap = maps.get(i);
+            float[] firstValue = (float[])curMap.values().toArray()[0];
+            String firstK = (String)curMap.keySet().toArray()[0];
+            if (firstK.contains("m")) {
+                float[] lastValue = (float[])maps.get(i - 1).values().toArray()[0];
+                curMap.put(firstK, new float[] {lastValue[0] + firstValue[0], lastValue[1] + firstValue[1]});
+            }
+        }
+
+        //HashMap -> Path
+        Path[] paths = new Path[subPath.size()];
+        for (int i = 0; i < maps.size(); i++) {
+            paths[i] = createPath(maps.get(i));
         }
 
         return paths;

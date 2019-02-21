@@ -2,7 +2,7 @@ package org.qxtx.idea.animate;
 
 import org.qxtx.idea.animate.animation.IdeaAnimationManager;
 import org.qxtx.idea.animate.animator.IdeaAnimatorManager;
-import org.qxtx.idea.animate.circularReveal.IdeaCircularReveal;
+import org.qxtx.idea.animate.circularReveal.IdeaCircularRevealManager;
 import org.qxtx.idea.animate.frame.IdeaFrameManager;
 import org.qxtx.idea.animate.vector.IdeaSvgManager;
 import org.qxtx.idea.view.IdeaSvgView;
@@ -20,7 +20,7 @@ public class IdeaManager {
 
     public static IdeaAnimatorManager animator;
     public static IdeaAnimationManager animation;
-    public static IdeaCircularReveal circularReveal;
+    public static IdeaCircularRevealManager circularReveal;
     public static IdeaFrameManager frame;
     public static IdeaSvgManager svg;
     public static IdeaSvgView svgView;

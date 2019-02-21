@@ -1,6 +1,7 @@
 package org.qxtx.test;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.qxtx.idea.animate.IdeaManager;
 import org.qxtx.idea.animate.IdeaUtil;
 import org.qxtx.idea.animate.animation.IdeaAnimationManager;
 import org.qxtx.idea.animate.vector.IdeaSvgManager;
@@ -57,7 +59,11 @@ public class MainActivity extends Activity {
 //                        "c-6.7,-17.32,-25.47,-30,-45,-30 C89.57,95,70,114.32,70,140 " +
 //                        "c0,35.3,37.93,62.57,90,115 c52.07,-52.42,90,-79.7,90,-115 " +
 //                        "C250,114.32,230.43,95,205,95z", false);
-                ideaVector.show(IdeaSvgManager.SVG_ARROWS, false);
+                ideaVector.setFillColor(Color.RED);
+                ideaVector.setLineColor(Color.WHITE);
+                ideaVector.show(IdeaUtil.SVG_SKULL, true);
+                IdeaSvgManager.scale(ideaVector, 0.4f);
+//                IdeaManager.circularReveal.start(ideaVector);
                 count++;
             }
         });
