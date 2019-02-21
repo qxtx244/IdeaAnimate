@@ -25,6 +25,20 @@ import java.util.List;
 /**
  * @CreateDate 2019/02/14 14:26.
  * @Author QXTX-GOSPELL
+ *
+ * 支持的keyword（包括小写）：M L Q C H V A S T Z
+ *
+ * String格式路径要求：
+ *   1、字符串以【m/M】开始；
+ *   2、两条路径之间必须至少有一个【空格】隔开，数值之间以【英文半角“,”】隔开；
+ *   3、必须以【z/Z】结尾；
+ *   4、支持多条闭合路径组成的svg图形；
+ *   5、允许任意添加空格。
+ *
+ * LinkedHashMap<String,float[]>格式路径要求：
+ *   1、每个键值对为一条路径的完整数据，key为【keyword(+其它数据)】的字符串，value为【float[]数组】；
+ *   2、以key为【m/M(+其它数据)】的键值对开始；
+ *   3、最后一个键值对的key必须为【z/Z(+其它数据)】，此键值对的value不能为【null】。
  */
 
 public class IdeaSvgView extends View {
