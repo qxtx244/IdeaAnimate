@@ -61,8 +61,8 @@ public class MainActivity extends Activity {
 //                        "C250,114.32,230.43,95,205,95z", false);
                 ideaVector.setFillColor(Color.RED);
                 ideaVector.setLineColor(Color.WHITE);
-                ideaVector.show(IdeaUtil.SVG_SKULL, true);
-                IdeaSvgManager.scale(ideaVector, 0.4f);
+                ideaVector.show(IdeaUtil.SVG_STAR, true);
+                IdeaSvgManager.scale(ideaVector, 4f);
 //                IdeaManager.circularReveal.start(ideaVector);
                 count++;
             }
