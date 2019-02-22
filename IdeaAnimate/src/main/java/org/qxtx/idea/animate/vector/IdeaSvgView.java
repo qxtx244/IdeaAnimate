@@ -24,6 +24,11 @@ import java.util.List;
  * @CreateDate 2019/02/14 14:26.
  * @Author QXTX-GOSPELL
  *
+ * A custom view for svg.
+ *  You can use {@link IdeaSvgManager} to take vector animation easily.
+ *
+ * @see IdeaSvgManager
+ *
  * IdeaSvgView在同一时间仅支持一个动画的播放，如果多个动画在同一时间段被要求播放，则只播放第一个动画，其他动画不被执行；
  * 例外的是，裁剪动画可与svg动画同时执行
  *
@@ -358,6 +363,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                     arraySize = 0;
                     break;
                 case 'A':
+                case 'a':
+                    arraySize = 7;
+                    break;
                 case 'H':
                 case 'h':
                 case 'V':
@@ -458,8 +466,11 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 case 'z':
                     path.close();
                     break;
-                case 'A':
-//                    path.arcTo();
+                case 'A': //Use lineTo() instead of arcTo() because i'm fail to make arcTo()
+                    path.lineTo(values[values.length - 2], values[values.length - 1]);
+                    break;
+                case 'a': //Use rLineTo() instead of arcTo() because i'm fail to make arcTo()
+                    path.rLineTo(values[values.length - 2], values[values.length - 1]);
                     break;
                 case 'H':
                     path.lineTo(values[0], 0f);

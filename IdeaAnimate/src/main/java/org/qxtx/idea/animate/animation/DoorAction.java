@@ -11,8 +11,11 @@ import java.lang.ref.WeakReference;
 /**
  * @CreateDate 2019/02/14 10:12.
  * @Author QXTX-GOSPELL
+ *
+ * Animation type of {@link IdeaAnimation}.
+ *
+ * @see IdeaAnimationManager
  */
-
 public final class DoorAction extends Animation {
     private Camera camera;
     private WeakReference<View> v;

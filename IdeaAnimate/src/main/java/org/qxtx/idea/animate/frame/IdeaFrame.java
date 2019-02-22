@@ -16,6 +16,11 @@ import java.util.List;
 /**
  * @CreateDate 2019/02/20 9:14.
  * @Author QXTX-GOSPELL
+ *
+ * A class for Frame animation.
+ *  You can use {@link IdeaFrameManager} to take frame animation easily.
+ *
+ * @see IdeaFrameManager
  */
 
 public class IdeaFrame {

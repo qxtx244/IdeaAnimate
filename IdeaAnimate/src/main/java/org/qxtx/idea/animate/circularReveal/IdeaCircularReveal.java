@@ -10,6 +10,11 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 /**
  * @CreateDate 2019/02/21 9:11.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take circularReveal animation.
+ *  You can use {@link IdeaCircularRevealManager} to take circularReveal animation easily.
+ *
+ * @see IdeaCircularRevealManager
  */
 
 public class IdeaCircularReveal {

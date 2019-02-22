@@ -1,7 +1,6 @@
 package org.qxtx.idea.animate;
 
 import android.support.annotation.NonNull;
-
 import java.util.List;
 
 /**

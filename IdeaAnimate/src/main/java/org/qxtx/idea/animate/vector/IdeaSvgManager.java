@@ -13,6 +13,11 @@ import java.util.List;
 /**
  * @CreateDate 2019/02/18 11:05.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take vector animate easily.
+ *
+ * @see IdeaSvgView
+ * @see org.qxtx.idea.animate.IdeaUtil
  */
 
 public class IdeaSvgManager implements IManager<IdeaSvgView> {
@@ -51,9 +56,6 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         target.setStrokeWidth(width);
     }
 
-    /**
-     * see {@link #showSvg(IdeaSvgView, String)}.
-     */
     public static void showSvg(@NonNull IdeaSvgView target, String svgPath) {
         showSvg(target, svgPath, false);
     }

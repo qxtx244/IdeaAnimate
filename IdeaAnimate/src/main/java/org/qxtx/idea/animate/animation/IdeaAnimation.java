@@ -14,6 +14,12 @@ import java.lang.ref.WeakReference;
 /**
  * @CreateDate 2019/01/16 16:05.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take animation easily.
+ * You can use {@link IdeaAnimationManager} to take animation easily.
+ *
+ * @see IdeaAnimationManager
+ * @see IdeaUtil
  */
 public class IdeaAnimation {
     private final String TAG = "IdeaAnimation";

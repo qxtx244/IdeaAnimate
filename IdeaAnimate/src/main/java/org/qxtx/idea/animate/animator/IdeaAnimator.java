@@ -23,7 +23,13 @@ import org.qxtx.idea.animate.PropertyFactory;
 
 import java.lang.reflect.Method;
 
-/** Solution method of animator. **/
+/**
+ * A class for take animator.
+ * You can use {@link IdeaAnimatorManager} to take animator easily.
+ *
+ * @see IdeaAnimatorManager
+ * @see IdeaUtil
+ */
 public final class IdeaAnimator {
     private final String TAG = "IdeaAnimator";
     private final String tag;

@@ -19,6 +19,11 @@ import java.util.List;
 /**
  * @CreateDate 2019/01/16 15:06.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take animatorSet.
+ *
+ * @see IdeaAnimatorSetManager
+ * @see IdeaUtil
  */
 
 public class IdeaAnimatorSet {

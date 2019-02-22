@@ -7,7 +7,9 @@ import android.view.View;
  * @CreateDate 2019/02/14 10:28.
  * @Author QXTX-GOSPELL
  *
- * Only Work on Android 5.0 or higher
+ * A class for take circularReveal animation easily. Only Work on Android 5.0 or higher.
+ *
+ * see {@link IdeaCircularReveal}
  */
 
 public final class IdeaCircularRevealManager {

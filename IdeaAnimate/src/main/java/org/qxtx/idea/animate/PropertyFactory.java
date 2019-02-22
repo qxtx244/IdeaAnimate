@@ -15,6 +15,9 @@ import java.lang.ref.WeakReference;
  * A static class that have two special methods name getCustom() and setCustom(T).
  *  It was useless unless you override it. You must override the method that getCustom() and setCustom(T).
  *   or be created in subclass if not such method in the parent
+ *
+ * @see org.qxtx.idea.animate.animator.IdeaAnimator
+ * @see org.qxtx.idea.animate.animation.IdeaAnimationManager
  **/
 public class PropertyFactory<T> {
     public static final String PROPERTY_CUSTOM = "custom";

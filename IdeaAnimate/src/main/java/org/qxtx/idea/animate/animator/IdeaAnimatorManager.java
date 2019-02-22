@@ -21,6 +21,12 @@ import org.qxtx.idea.animate.PropertyFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A class for take animator easily.
+ *
+ * @see IdeaAnimator
+ * @see IdeaUtil
+ */
 public class IdeaAnimatorManager implements IManager<IdeaAnimator> {
     private static final String TAG = "IdeaAnimatorManager";
     private static final long DEFAULT_DURATION = 500;

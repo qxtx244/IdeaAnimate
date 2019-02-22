@@ -13,6 +13,9 @@ import android.animation.TypeEvaluator;
  *  "123456","#123456", "12345678" or "#12345678". It will return value type of String. There are another
  *  implementation by android.jar. See {@link ArgbEvaluator}. You can use new ArgbEvaluator() while
  *  animator use value of color that type is int.
+ *
+ *  @see org.qxtx.idea.animate.animator.IdeaAnimator
+ *  @see org.qxtx.idea.animate.animation.IdeaAnimationManager
  **/
 public final class ArgbTypeEvaluator implements TypeEvaluator {
     private final int[] currentColors = {-1, -1, -1};

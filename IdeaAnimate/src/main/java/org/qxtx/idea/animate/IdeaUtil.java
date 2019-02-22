@@ -13,6 +13,9 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * @CreateDate 2019/01/16 14:04.
  * @Author QXTX-GOSPELL
+ *
+ * A util class include only the constants.
+ *  You can find any constant what is used by other class at this package in this.
  */
 public class IdeaUtil {
     @Retention(RetentionPolicy.SOURCE)

@@ -10,8 +10,11 @@ import java.util.List;
 /**
  * @CreateDate 2019/01/17 10:52.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take animatorSet easily.
+ *
+ * @see IdeaAnimatorSet
  */
-
 public class IdeaAnimatorSetManager implements IManager<IdeaAnimatorSet> {
     private static final String TAG = "IdeaAnimatorSetManager";
     private static IdeaAnimatorSetManager manager;

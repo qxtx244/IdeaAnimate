@@ -11,8 +11,11 @@ import java.lang.ref.WeakReference;
 /**
  * @CreateDate 2019/02/14 10:10.
  * @Author QXTX-GOSPELL
+ *
+ * A class type for {@link IdeaAnimationManager}.
+ *
+ * @see IdeaAnimationManager
  */
-
 public final class Rotate3D extends Animation {
     public static final String TYPE_TRANSLATE = "translation";
     public static final String TYPE_ROTATE_X = "rotateX";

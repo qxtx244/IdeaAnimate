@@ -19,6 +19,13 @@ import java.util.List;
 /**
  * @CreateDate 2019/01/16 16:08.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take animation easily.
+ *
+ * @see IdeaAnimation
+ * @see DoorAction
+ * @see IdeaUtil
+ * @see Rotate3D
  */
 public class IdeaAnimationManager implements IManager<IdeaAnimation> {
     public static final String TAG = "IdeaAnimationManager";

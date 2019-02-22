@@ -7,6 +7,10 @@ import android.widget.ImageView;
 /**
  * @CreateDate 2019/02/14 9:45.
  * @Author QXTX-GOSPELL
+ *
+ * A class for take frame animate easily.
+ *
+ * see {@link IdeaFrame}
  */
 
 public class IdeaFrameManager {
@@ -23,6 +27,4 @@ public class IdeaFrameManager {
     public static IdeaFrame frame(@NonNull ImageView target, @NonNull int... resIds) {
         return baseFrame(target).addFrame(target.getContext(), resIds);
     }
-
-
 }
