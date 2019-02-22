@@ -9,11 +9,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -44,7 +44,7 @@ import java.util.List;
  *   备注：view的tag用来标记view此时的图形状态
  */
 
-public class IdeaSvgView extends View {
+public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private static final String TAG = "IdeaSvgPathAnimate";
 
     private static final String DEFAULT_COLOR = "#1E90FF";
@@ -68,6 +68,8 @@ public class IdeaSvgView extends View {
     private float strokeWidth;
     private ValueAnimator animator;
 
+    private RectF rectF;
+
     public IdeaSvgView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
@@ -83,15 +85,15 @@ public class IdeaSvgView extends View {
             lineColor = color;
         }
 
-        show(svgPath, isFillPath);
+        showSvg(svgPath, isFillPath);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        //Center the svg(but it look like work bad)
-        canvas.translate(getWidth() / 2f, getHeight() / 2f);
+        /* Center the svg, it looks work in well now. Move the path but not the canvas. */
+        movePathToCenter();
 
         if (path != null && (mode != MODE_TRIM || isFillPath)) {
             paint.setStyle(isFillPath ? Paint.Style.FILL : Paint.Style.STROKE);
@@ -114,22 +116,58 @@ public class IdeaSvgView extends View {
     }
 
     /**
-     * pullAll() only can be make a deep-copy with base-value but object.
-     * @return This LinkedHashMap was a deep-copy from {@link #startSvg} for protect this class member
+     * Get svg path.
+     * @return svg path that type of {@link Path}
      */
-    public LinkedHashMap<String, float[]> getSvgMap() {
-        return deepCopyMap(startSvg);
-    }
-
-    public String getSvgString() {
-        return Map2String(startSvg);
-    }
-
     public Path getPath() {
         return path;
     }
 
-    public void show(@NonNull String svgPath, boolean isFillPath) {
+    /**
+     * Get svg data.
+     * Warning: pullAll() only can be make a deep-copy with base-value but object.
+     * @return A LinkedHashMap of deep-copy from {@link #startSvg}
+     */
+    public LinkedHashMap<String, float[]> getSvgMap() {
+        return deepCopy(startSvg);
+    }
+
+    /**
+     * Get svg data.
+     * @return svg data that type of {@link String}
+     */
+    public String getSvgString() {
+        return map2String(startSvg);
+    }
+
+    /**
+     * @return duration of animation.
+     */
+    public long getDuration() {
+        return duration;
+    }
+
+    public int getFillColor() {
+        return fillColor;
+    }
+
+    public int getLineColor() {
+        return lineColor;
+    }
+
+    /**
+     * @return true means view is playing aniamtion, or not
+     */
+    public boolean isAnimRunning() {
+        return animator != null;
+    }
+
+    /**
+     * Show a svg immediately without animation. It will clear current svg.
+     * @param svgPath svg data
+     * @param isFillPath fill color to path if true, or draw path only
+     */
+    public void showSvg(@NonNull String svgPath, boolean isFillPath) {
         if (animator != null) {
             Log.e(TAG, "Need to show a svg but animation is running, so stop the animation!");
             animator.cancel();
@@ -147,32 +185,61 @@ public class IdeaSvgView extends View {
             paint.setColor(lineColor);
         }
 
-        startSvg = String2Map(svgPath);
+        startSvg = string2Map(svgPath);
         path = createPath(startSvg);
+        RectF rectF = new RectF();
+        path.computeBounds(rectF, true);
         postInvalidate();
     }
 
-    public void show(@NonNull String svgPath) {
-        show(svgPath, false);
+    public void showSvg(@NonNull String svgPath) {
+        showSvg(svgPath, false);
     }
 
     /**
-     * @param toSvg It is data string like as "M0,0 L3,4 L5,6 z".
+     * Extra animation. Scale svg with animation.
+     * @param scale must be positive, in float
      */
-    public void startAnimation(@NonNull String toSvg) {
+    public void scale(float scale) {
+        if (scale < 0f) {
+            Log.e(TAG, "Value of scale must be positive.");
+            return ;
+        }
+
+        LinkedHashMap<String, float[]> svg = getSvgMap();
+        LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
+        Iterator<float[]> iteratorV = svg.values().iterator();
+        for (String key : svg.keySet()) {
+            float[] values = iteratorV.next();
+            float[] newValues = new float[values.length];
+            for (int i = 0; i < values.length; i++) {
+                newValues[i] = values[i] * scale;
+            }
+            newSvg.put(key, newValues);
+        }
+
+        showWithAnim(newSvg);
+    }
+
+    /**
+     * It will change old svg to new svg with animation, and the new svg data type is String.
+     * @param toSvg new svg data, example as "M0,0 L3,4 L5,6 z"
+     */
+    public void showWithAnim(@NonNull String toSvg) {
         if (animator != null) {
             Log.e(TAG, "IdeaSvgView only can run one animate in the same time! wait for current animation?");
             return ;
         }
 
-        endSvg = String2Map(toSvg);
+        endSvg = string2Map(toSvg);
         svgAnimation();
     }
 
     /**
-     * @param toSvg It is data string like as "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}".
+     * It will change old svg to new svg with animation, and the new svg data type is LinkedHashMap<String, float[]>.
+     * @param toSvg new svg data, example as "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}"
      */
-    public void startAnimation(LinkedHashMap<String, float[]> toSvg) {
+    public void showWithAnim(LinkedHashMap<String, float[]> toSvg) {
         if (animator != null) {
             Log.e(TAG, "IdeaSvgView only can run one animate in the same time! wait for current animation?");
             return ;
@@ -180,49 +247,178 @@ public class IdeaSvgView extends View {
 
         endSvg = endSvg == null ? new LinkedHashMap<>() : endSvg;
         endSvg.clear();
-        endSvg = deepCopyMap(toSvg);
+        endSvg = deepCopy(toSvg);
 //        endSvg.putAll(toSvg); //Should to take a deep-copy
 
         svgAnimation();
     }
 
-    public void startTrimAnimation(int dstLen) {
+    /**
+     * Trim one dst and move at the path with animation
+     * @param dstLen trim len of path
+     */
+    public void startTrimAnim(int dstLen) {
         trimAnimation(dstLen, false);
     }
 
-    public void startTrimAnimation(boolean isReverse) {
+    /**
+     * Trim path that len min of 0 and max of the whole path.
+     * @param isReverse len of trim from whole path to 0 if true, or reverse
+     */
+    public void startTrimAnim(boolean isReverse) {
         trimAnimation(-1, isReverse);
     }
 
-    public void startTrimAnimation() {
-        startTrimAnimation(false);
+    public void startTrimAnim() {
+        startTrimAnim(false);
     }
 
+    /**
+     * Set duration of a animation.
+     */
     public IdeaSvgView setDuration(long duration) {
         this.duration = duration;
         return this;
     }
 
+    /**
+     * Set color of path fill.
+     */
     public IdeaSvgView setFillColor(int fillColor) {
         this.fillColor = fillColor;
         return this;
     }
 
+    /**
+     * Set color of path.
+     */
     public IdeaSvgView setLineColor(int lineColor) {
         this.lineColor = lineColor;
         return this;
     }
 
+    /**
+     * Set a paint.
+     */
     public IdeaSvgView setPaint(Paint paint) {
         this.paint = paint;
         return this;
     }
 
+    /**
+     * Set stroke width of paint, must be positive
+     */
     public IdeaSvgView setStrokeWidth(float strokeWidth) {
-        this.strokeWidth = strokeWidth;
+        if (strokeWidth > 0f) {
+            this.strokeWidth = strokeWidth;
+        }
         return this;
     }
 
+    /**
+     * Convert svg data type from string to LinkedHashMap<String, float[]>.
+     * @param svgData svg data string
+     * @return svg data that type of {@link LinkedHashMap}
+     */
+    public LinkedHashMap<String, float[]> string2Map(String svgData) {
+        //也许使用正则负担也不大
+        svgData = svgData.trim()
+                .replace("z", " z")
+                .replace("Z", " Z")
+                .replace("  ", " ");
+
+        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
+        int endIndex;
+        for (int i = 0; i < svgData.length(); i = endIndex + 1) {
+            char svgKey = svgData.charAt(i);
+            int arraySize;
+            switch (svgKey) {
+                case 'M':
+                case 'm':
+                    arraySize = 2;
+                    break;
+                case 'L':
+                case 'l':
+                    arraySize = 2;
+                    break;
+                case 'C':
+                case 'c':
+                case 'S':
+                case 's':
+                    arraySize = 6;
+                    break;
+                case 'Q':
+                case 'q':
+                case 'T':
+                case 't':
+                    arraySize = 4;
+                    break;
+                case 'Z':
+                case 'z':
+                    arraySize = 0;
+                    break;
+                case 'A':
+                case 'H':
+                case 'h':
+                case 'V':
+                case 'v':
+                    arraySize = 1;
+                    break;
+                default:
+                    arraySize = -1;
+                    break;
+            }
+            endIndex = doSave(arraySize, svgData, i + 1, map);
+        }
+
+        return map;
+    }
+
+    /**
+     * Convert svg data type from LinkedHashMap<String,float[]> to string.
+     * @param svgData svg data map
+     * @return svg data that type of {@link String}
+     */
+    public String map2String(LinkedHashMap<String, float[]> svgData) {
+        StringBuilder curPath = new StringBuilder();
+
+        for (String key : svgData.keySet()) {
+            float[] values = svgData.get(key);
+            curPath.append(key.charAt(0));
+            for (int i = 0; i < values.length; i++) {
+                curPath.append(values[i]);
+                if (i != values.length - 1) {
+                    curPath.append(",");
+                } else {
+                    curPath.append(" ");
+                }
+            }
+        }
+        return curPath.toString();
+    }
+
+    /**
+     * Move path to the view center.
+     */
+    private void movePathToCenter() {
+        float centerX = getWidth() / 2f;
+        float centerY = getHeight() / 2f;
+        if (path != null) {
+            if (rectF == null) {
+                rectF = new RectF();
+            }
+            path.computeBounds(rectF, true);
+            centerX = centerX - rectF.centerX();
+            centerY = centerY - rectF.centerY();
+            path.offset(centerX, centerY);
+        }
+    }
+
+    /**
+     * Create path with data type of {@link LinkedHashMap}.
+     * @param svgMap svg data
+     * @return the object about svg and type of {@link Path}
+     */
     private Path createPath(LinkedHashMap<String, float[]> svgMap) {
         Path path = new Path();
         float[] values;
@@ -280,6 +476,26 @@ public class IdeaSvgView extends View {
             }
         }
         return path;
+    }
+
+    /**
+     * Make deep-copy of object type of {@link LinkedHashMap}.
+     * @param fromMap svg data
+     * @return svg data type of {@link LinkedHashMap}
+     */
+    private LinkedHashMap<String, float[]> deepCopy(LinkedHashMap<String, float[]> fromMap) {
+        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
+        Iterator<String> iteratorK = fromMap.keySet().iterator();
+        Iterator<float[]> iteratorV = fromMap.values().iterator();
+        while (iteratorK.hasNext()) {
+            String key = iteratorK.next();
+            float[] v = iteratorV.next();
+            float[] values = new float[v.length];
+            System.arraycopy(v, 0, values, 0, v.length);
+            map.put(key, values);
+        }
+
+        return map;
     }
 
     private int doSave(int arraySize, String svgData, int startIndex, LinkedHashMap<String, float[]> map) {
@@ -340,77 +556,53 @@ public class IdeaSvgView extends View {
         return endIndex;
     }
 
-    public LinkedHashMap<String, float[]>  String2Map(String svgData) {
-        //也许使用正则负担也不大
-        svgData = svgData
-                .trim()
-                .replace("z", " z")
-                .replace("Z", " Z")
-                .replace("  ", " ");
+    /**
+     * Split path to the simple path that everyone is a close-path.
+     */
+    private Path[] splitPath() {
+        List<String> subPath = new ArrayList<>();
 
-        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
-        int endIndex;
-        for (int i = 0; i < svgData.length(); i = endIndex + 1) {
-            char svgKey = svgData.charAt(i);
-            int arraySize;
-            switch (svgKey) {
-                case 'M':
-                case 'm':
-                    arraySize = 2;
-                    break;
-                case 'L':
-                case 'l':
-                    arraySize = 2;
-                    break;
-                case 'C':
-                case 'c':
-                case 'S':
-                case 's':
-                    arraySize = 6;
-                    break;
-                case 'Q':
-                case 'q':
-                case 'T':
-                case 't':
-                    arraySize = 4;
-                    break;
-                case 'Z':
-                case 'z':
-                    arraySize = 0;
-                    break;
-                case 'A':
-                case 'H':
-                case 'h':
-                case 'V':
-                case 'v':
-                    arraySize = 1;
-                    break;
-                default:
-                    arraySize = -1;
-                    break;
-            }
-            endIndex = doSave(arraySize, svgData, i + 1, map);
-        }
-
-        return map;
-    }
-    
-    public String Map2String(LinkedHashMap<String, float[]> svgData) {
-        StringBuilder curPath = new StringBuilder();
-
-        for (String key : svgData.keySet()) {
-            float[] values = svgData.get(key);
-            curPath.append(key.charAt(0));
-            for (int i = 0; i < values.length; i++) {
-                curPath.append(values[i]);
-                if (i != values.length - 1) {
-                    curPath.append(",");
-                } else {
-                    curPath.append(" ");
-                }
+        //Svg map path -> String[] path，每一条闭合的路径
+        String svgPath = map2String(startSvg);
+        int startPos = 0;
+        for (int i = 0; i < svgPath.length(); i++) {
+            if (svgPath.charAt(i) == 'z' || svgPath.charAt(i) == 'Z') {
+                String dstPath = svgPath.substring(startPos, i + 1);
+                subPath.add(dstPath);
+                startPos = i + 1;
             }
         }
-        return curPath.toString();
+
+        //String路径 -> HashMap路径
+        //由于之前已经调整好描点位置，因此不需要再考虑起始描点的问题
+        firstPointer = new float[2];
+        List<LinkedHashMap<String, float[]>> maps = new ArrayList<>();
+        for (int i = 0; i < subPath.size(); i++) {
+            String data = subPath.get(i);
+            maps.add(string2Map(data));
+        }
+
+        /*
+         * 需要将起始描点类型从【m】转换为【M】
+         * 如果起始为‘m’，则替换此键的值为【上一个坐标值】 + 【下一个坐标值】，
+         */
+        for (int i = 0; i < maps.size(); i++) {
+            LinkedHashMap<String, float[]> curMap = maps.get(i);
+            float[] firstValue = (float[])curMap.values().toArray()[0];
+            String firstK = (String)curMap.keySet().toArray()[0];
+            if (firstK.contains("m")) {
+                float[] lastValue = (float[])maps.get(i - 1).values().toArray()[0];
+                curMap.put(firstK, new float[] {lastValue[0] + firstValue[0], lastValue[1] + firstValue[1]});
+            }
+        }
+
+        //HashMap -> Path
+        Path[] paths = new Path[subPath.size()];
+        for (int i = 0; i < maps.size(); i++) {
+            paths[i] = createPath(maps.get(i));
+        }
+
+        return paths;
     }
 
     private void svgAnimation() {
@@ -453,19 +645,22 @@ public class IdeaSvgView extends View {
 
             private void onEnd() {
                 startSvg.clear();
-                startSvg = deepCopyMap(endSvg);
+                startSvg = deepCopy(endSvg);
 //                startSvg.putAll(endSvg); //Should to make a deep-copy
                 endSvg.clear();
                 animator = null;
             }
         });
+
         animator.start();
     }
 
     /**
      * The svg maybe contains multi close-path, so we have to check it to take animation fully.
-     * @param dstLen
-     * @param isReverse
+     * If dstLen not the -1, is take a dst animation, or take a fully trim animation.
+     * If dstLen is not the positive, make second param invalid.
+     * @param dstLen length of trim path, in pixel
+     * @param isReverse false is change from to dst to fully, or change from fully t dst
      */
     private void trimAnimation(int dstLen, boolean isReverse) {
         mode = MODE_TRIM;
@@ -502,66 +697,5 @@ public class IdeaSvgView extends View {
             postInvalidate();
         });
         animators.start();
-    }
-
-    private Path[] splitPath() {
-        List<String> subPath = new ArrayList<>();
-
-        //Svg map path -> String[] path，每一条闭合的路径
-        String svgPath = Map2String(startSvg);
-        int startPos = 0;
-        for (int i = 0; i < svgPath.length(); i++) {
-            if (svgPath.charAt(i) == 'z' || svgPath.charAt(i) == 'Z') {
-                String dstPath = svgPath.substring(startPos, i + 1);
-                subPath.add(dstPath);
-                startPos = i + 1;
-            }
-        }
-
-        //String路径 -> HashMap路径
-        //由于之前已经调整好描点位置，因此不需要再考虑起始描点的问题
-        firstPointer = new float[2];
-        List<LinkedHashMap<String, float[]>> maps = new ArrayList<>();
-        for (int i = 0; i < subPath.size(); i++) {
-            String data = subPath.get(i);
-            maps.add(String2Map(data));
-        }
-
-        /*
-         * 需要将起始描点类型从【m】转换为【M】
-         * 如果起始为‘m’，则替换此键的值为【上一个坐标值】 + 【下一个坐标值】，
-         */
-        for (int i = 0; i < maps.size(); i++) {
-            LinkedHashMap<String, float[]> curMap = maps.get(i);
-            float[] firstValue = (float[])curMap.values().toArray()[0];
-            String firstK = (String)curMap.keySet().toArray()[0];
-            if (firstK.contains("m")) {
-                float[] lastValue = (float[])maps.get(i - 1).values().toArray()[0];
-                curMap.put(firstK, new float[] {lastValue[0] + firstValue[0], lastValue[1] + firstValue[1]});
-            }
-        }
-
-        //HashMap -> Path
-        Path[] paths = new Path[subPath.size()];
-        for (int i = 0; i < maps.size(); i++) {
-            paths[i] = createPath(maps.get(i));
-        }
-
-        return paths;
-    }
-
-    private LinkedHashMap<String, float[]> deepCopyMap(LinkedHashMap<String, float[]> fromMap) {
-        LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
-        Iterator<String> iteratorK = fromMap.keySet().iterator();
-        Iterator<float[]> iteratorV = fromMap.values().iterator();
-        while (iteratorK.hasNext()) {
-            String key = iteratorK.next();
-            float[] v = iteratorV.next();
-            float[] values = new float[v.length];
-            System.arraycopy(v, 0, values, 0, v.length);
-            map.put(key, values);
-        }
-
-        return map;
     }
 }

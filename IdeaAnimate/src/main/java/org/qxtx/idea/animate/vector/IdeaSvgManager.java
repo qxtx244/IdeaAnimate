@@ -1,7 +1,6 @@
 package org.qxtx.idea.animate.vector;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import org.qxtx.idea.animate.IManager;
 import org.qxtx.idea.animate.IdeaUtil;
@@ -40,119 +39,88 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         return manager;
     }
 
-    public static void show(@NonNull IdeaSvgView target, String svgPath) {
-        show(target, svgPath, false);
+    public static void setDuration(@NonNull IdeaSvgView target, long duration) {
+        target.setDuration(duration);
     }
 
-    public static void show(@NonNull IdeaSvgView target, String svgPath, boolean isReverse) {
-        target.show(svgPath, isReverse);
+    public static void setColor(@NonNull IdeaSvgView target, int lineColor, int fillColor) {
+        target.setLineColor(lineColor).setFillColor(fillColor);
     }
 
-    public static void changeTo(@NonNull IdeaSvgView target, String toSvg) {
-        target.startAnimation(toSvg);
+    public static void setStrokeWidth(@NonNull IdeaSvgView target, int width) {
+        target.setStrokeWidth(width);
     }
 
-    public static void changeTo(@NonNull IdeaSvgView target, LinkedHashMap<String, float[]> toSvg) {
-        target.startAnimation(toSvg);
+    /**
+     * see {@link #showSvg(IdeaSvgView, String)}.
+     */
+    public static void showSvg(@NonNull IdeaSvgView target, String svgPath) {
+        showSvg(target, svgPath, false);
+    }
+    
+    public static void showSvg(@NonNull IdeaSvgView target, String svgPath, boolean isFillPath) {
+        target.showSvg(svgPath, isFillPath);
     }
 
-    public static void arrows(@NonNull IdeaSvgView target) {
-        target.show(IdeaUtil.SVG_PAR, true);
-        target.setTag("menu");
+    public static void showWithAnim(@NonNull IdeaSvgView target, String toSvg) {
+        target.showWithAnim(toSvg);
+    }
+
+    public static void showWithAnim(@NonNull IdeaSvgView target, LinkedHashMap<String, float[]> toSvg) {
+        target.showWithAnim(toSvg);
+    }
+
+    /**
+     * Change from menu and arrows with click. It dependent the target's target.
+     */
+    public static void par2arrowsAnim(@NonNull IdeaSvgView target) {
+        target.showSvg(IdeaUtil.SVG_PAR, true);
+        target.setTag("svg_par");
         target.setOnClickListener(v -> {
             String tag = target.getTag().toString();
-            if (!tag.endsWith("arrows")) {
-                target.setTag(target.getTag() + "arrows");
-                target.startAnimation(IdeaUtil.SVG_ARROWS);
+            if (tag.equals("svg_par")) {
+                target.showWithAnim(IdeaUtil.SVG_ARROWS);
+                target.setTag("svg_arrows");
             } else {
-                target.setTag(tag.substring(0, tag.length() - 6));
-                target.startAnimation(IdeaUtil.SVG_PAR);
+                target.showWithAnim(IdeaUtil.SVG_PAR);
+                target.setTag("svg_par");
             }
         });
     }
 
-    public static void scale(@NonNull IdeaSvgView target, float scale) {
-        if (scale < 0f) {
-            Log.e(TAG, "Value of scale must be positive.");
-            return ;
-        }
-
-        LinkedHashMap<String, float[]> svg = target.getSvgMap();
-        LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
-        Iterator<float[]> iteratorV = svg.values().iterator();
-        for (String key : svg.keySet()) {
-            float[] values = iteratorV.next();
-            float[] newValues = new float[values.length];
-            for (int i = 0; i < values.length; i++) {
-                newValues[i] = values[i] * scale;
-            }
-            newSvg.put(key, newValues);
-        }
-
-        target.startAnimation(newSvg);
-    }
-
-    public static void trimDst(@NonNull IdeaSvgView target, int dstLen) {
-        target.startTrimAnimation(dstLen);
-    }
-
-    public static void trimFully(@NonNull IdeaSvgView target, boolean isReverse) {
-        if (isReverse) {
-            target.startTrimAnimation(true);
-        } else {
-            target.startTrimAnimation(false);
-        }
-    }
-
-    public static void zero2Nine(@NonNull IdeaSvgView target, int num) {
-        zero2Nine(target, num, true);
+    public static void scaleAnim(@NonNull IdeaSvgView target, float scale) {
+        target.scale(scale);
     }
 
     /**
-     * 缩放某一条闭合路径直至0，即可让它消失
-     * @param target
-     * @param num
-     * @param useAnimate
+     * Trim path for one dst that dstLen move in the path.
+     * @param dstLen len of dst path
      */
-    public static void zero2Nine(@NonNull IdeaSvgView target, int num, boolean useAnimate) {
-        target.setTag("numberMode" + num + "" + target.getTag());
-        switch (num) {
-            case 0:
-                LinkedHashMap<String, float[]> map = target.getSvgMap();
-                Iterator<String> iteratorK = map.keySet().iterator();
-                Iterator<float[]> iteratorV = map.values().iterator();
-                while (iteratorK.hasNext()) {
-                    char key = iteratorK.next().charAt(0);
-                    if (key == 'Z' || key == 'z') {
-                        break;
-                    }
+    public static void trimDstAnim(@NonNull IdeaSvgView target, int dstLen) {
+        target.startTrimAnim(dstLen);
+    }
 
-                    float[] values = iteratorV.next();
-                    for (int i = 0; i < values.length; i++) {
-                        values[i] = 0f;
-                    }
-                }
-                changeTo(target, map);
-                break;
-            case 1:
-                break;
-            case 2:
-                break;
-            case 3:
-                break;
-            case 4:
-                break;
-            case 5:
-                break;
-            case 6:
-                break;
-            case 7:
-                break;
-            case 8:
-                break;
-            case 9:
-                break;
+    /**
+     * Trim path from one dst to fully path with animation.
+     * @param isReverse True is make trim dst len change from 0 to fully path len, or reverse
+     */
+    public static void trimFullyAnim(@NonNull IdeaSvgView target, boolean isReverse) {
+        if (isReverse) {
+            target.startTrimAnim(true);
+        } else {
+            target.startTrimAnim(false);
         }
+    }
+
+    /**
+     * Number change on 0~9 with animation.
+     * @param num The num change to.
+     */
+    public static void numAnim(@NonNull IdeaSvgView target, int num) {
+        LinkedHashMap<String, float[]> map = target.string2Map(IdeaUtil.SVG_NUMBER_8);
+        int[] dstIndex = IdeaUtil.NUMBER_CHOOSE[num];
+        changeNumber(dstIndex, map);
+        target.showWithAnim(map);
     }
 
     @Override
@@ -208,5 +176,29 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         }
         list = null;
         manager = null;
+    }
+
+    private static void changeNumber(int[] dstIndex, LinkedHashMap<String, float[]> map) {
+        int index = 0;
+        Iterator<String> iteratorK = map.keySet().iterator();
+        while (iteratorK.hasNext()) {
+            String key = iteratorK.next();
+            char keyword = key.charAt(0);
+            if (keyword == 'z' || keyword == 'Z') {
+                index++;
+            }
+
+            boolean findDst = false;
+            for (int i : dstIndex) {
+                if (i == index) {
+                    findDst = true;
+                    break;
+                }
+            }
+            if (findDst) {
+                float[] value = map.get(key);
+                System.arraycopy(new float[value.length], 0, value, 0, value.length);
+            }
+        }
     }
 }

@@ -2,7 +2,6 @@ package org.qxtx.test;
 
 import android.app.Activity;
 import android.graphics.Color;
-import android.graphics.Path;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -21,14 +20,13 @@ public class MainActivity extends Activity {
     private IdeaSvgView ideaVector;
     int count = 0;
     View view;
+    int num = -1;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn = (Button)findViewById(R.id.send);
-        image = (ImageView) findViewById(R.id.bgIcon);
-        ImageView img = (ImageView)findViewById(R.id.image);
         TextView text = (TextView)findViewById(R.id.text);
         ideaVector = (IdeaSvgView) findViewById(R.id.idea);
         view = findViewById(R.id.main);
@@ -45,15 +43,23 @@ public class MainActivity extends Activity {
 
 //                ideaVector.startTrimAnimation(60);
 //                ideaVector.setDuration(1000).startTrimAnimation(false);
-                IdeaSvgManager.zero2Nine(ideaVector, 0);
-//                IdeaSvgManager.scale(ideaVector, 0.5f);
+
+//                num++;
+//                num = num == 10 ? 0 : num;
+//                IdeaSvgManager.zero2Nine(ideaVector, num);
+
+                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
+                ideaVector.postDelayed(() -> {
+                    IdeaSvgManager.scaleAnim(ideaVector, 5f);
+                }, ideaVector.getDuration() * 2);
+
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
                 ideaVector.setFillColor(Color.RED);
                 ideaVector.setLineColor(Color.WHITE);
-                ideaVector.show(IdeaUtil.SVG_NUMBER, true);
-                IdeaSvgManager.scale(ideaVector, 2f);
+                ideaVector.showSvg(IdeaUtil.SVG_HEART_2_BRIDE, true);
+                IdeaSvgManager.scaleAnim(ideaVector, 5f);
                 count++;
             }
         });
