@@ -1,4 +1,4 @@
-package org.qxtx.idea.animate.vector;
+package org.qxtx.idea.animate.view;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -14,6 +14,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+
+import org.qxtx.idea.animate.vector.IdeaSvgManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -32,21 +34,23 @@ import java.util.List;
  * IdeaSvgView在同一时间仅支持一个动画的播放，如果多个动画在同一时间段被要求播放，则只播放第一个动画，其他动画不被执行；
  * 例外的是，裁剪动画可与svg动画同时执行
  *
- * 支持的keyword（包括小写）：M L Q C H V A S T Z
+ * 支持的keyword（包括小写）：M L Q C H V S T Z A(A路径暂时使用直线代替)
  *
  * String格式路径要求：
- *   1、字符串以【m/M】开始；
- *   2、两条路径之间必须至少有一个【空格】隔开，数值之间以【英文半角“,”】隔开；
- *   3、必须以【z/Z】结尾；
- *   4、支持多条闭合路径组成的svg图形；
- *   5、允许任意添加空格。
+ *   1、分隔符可以为【,】或【空格】；
+ *   2、字符串以【m/M】开始；
+ *   3、每个keyword字符必须使用【分隔符】和前一个keyword的数值隔开；
+ *   4、必须以【z/Z】结尾；
+ *   5、支持多条闭合路径组成的svg图形；
+ *   示例：
+ *   "M0 0 L50 0 L50 10 L0 10,z M0 20 L50 20 L50,30 L0 30 Z "
  *
  * LinkedHashMap<String,float[]>格式路径要求：
  *   1、每个键值对为一条路径的完整数据，key为【keyword(+其它数据)】的字符串，value为【float[]数组】；
  *   2、以key为【m/M(+其它数据)】的键值对开始；
  *   3、最后一个键值对的key必须为【z/Z(+其它数据)】，此键值对的value不能为【null】。
  *
- *   备注：view的tag用来标记view此时的图形状态
+ *   备注：view的tag用来标记view此时的svg状态
  */
 
 public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
@@ -61,7 +65,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private String tag;
     private LinkedHashMap<String, float[]> startSvg;
     private LinkedHashMap<String, float[]> endSvg;
-    float[] firstPointer;
     private int mode;
     private Path path;
     private Path[] trimPath;
@@ -72,8 +75,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private int fillColor;
     private float strokeWidth;
     private ValueAnimator animator;
-
-    private RectF rectF;
+    private RectF pathMeasure;
+    private float[] lastPointer;
 
     public IdeaSvgView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -97,10 +100,12 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        /* Center the svg, it looks work in well now. Move the path but not the canvas. */
-        movePathToCenter();
+        if (path != null) {
+            setPathToCenter(path, canvas);
+        }
 
         if (path != null && (mode != MODE_TRIM || isFillPath)) {
+            /* Center the svg, it looks work in well now. Move the path but not the canvas. */
             paint.setStyle(isFillPath ? Paint.Style.FILL : Paint.Style.STROKE);
             paint.setColor(isFillPath ? fillColor : lineColor);
             canvas.drawPath(path, paint);
@@ -110,9 +115,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         if (mode == MODE_TRIM && trimPath != null) {
             paint.setStyle(Paint.Style.STROKE);
             paint.setColor(lineColor);
-            for (Path aTrimPath : trimPath) {
+            for (Path i : trimPath) {
                 try {
-                    canvas.drawPath(aTrimPath, paint);
+                    canvas.drawPath(i, paint);
                 } catch (Exception e) {
                     Log.e(TAG, "Take a unknown error but not to broken down the application, haha.");
                 }
@@ -180,7 +185,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         }
 
         endSvg = null;
-        firstPointer = null;
         mode = MODE_SVG;
 
         this.isFillPath = isFillPath;
@@ -191,9 +195,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         }
 
         startSvg = string2Map(svgPath);
+        //Debug: Check the startSvg is correct
         path = createPath(startSvg);
-        RectF rectF = new RectF();
-        path.computeBounds(rectF, true);
         postInvalidate();
     }
 
@@ -321,16 +324,40 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /**
+     * It is better choice to use {@link #stopAnimateSafely()} instead of this call
+     *  if you wish work well whatever. Also you can call this if it is useful to call this
+     *  or you really want to try it.
+     *
+     * @param forceStop cancel animation if true, It will be interrupt animation immediately if true
+     *                  and maybe cause something happen that you're unexpected.
+     *                  End animation if false, and it will set animation to the final status.
+     */
+    public void stopAnimate(boolean forceStop) {
+        if (!isAnimRunning()) {
+            return ;
+        }
+
+        if (forceStop) {
+            animator.cancel();
+        } else {
+            animator.end();
+        }
+    }
+
+    public void stopAnimateSafely() {
+        stopAnimate(false);
+    }
+
+    /**
      * Convert svg data type from string to LinkedHashMap<String, float[]>.
      * @param svgData svg data string
      * @return svg data that type of {@link LinkedHashMap}
      */
     public LinkedHashMap<String, float[]> string2Map(String svgData) {
-        //也许使用正则负担也不大
         svgData = svgData.trim()
-                .replace("z", " z")
-                .replace("Z", " Z")
-                .replace("  ", " ");
+        .replace("z", " z")
+        .replace("Z", " Z")
+        .replace("  ", " ");
 
         LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
         int endIndex;
@@ -376,7 +403,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                     arraySize = -1;
                     break;
             }
-            endIndex = doSave(arraySize, svgData, i + 1, map);
+            endIndex = saveSvg(arraySize, svgData, i, map);
         }
 
         return map;
@@ -406,19 +433,26 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /**
-     * Move path to the view center.
+     * Translate canvas to set path in the view center.
      */
-    private void movePathToCenter() {
+    private void setPathToCenter(Path path, @Nullable Canvas canvas) {
         float centerX = getWidth() / 2f;
         float centerY = getHeight() / 2f;
-        if (path != null) {
-            if (rectF == null) {
-                rectF = new RectF();
-            }
-            path.computeBounds(rectF, true);
-            centerX = centerX - rectF.centerX();
-            centerY = centerY - rectF.centerY();
-            path.offset(centerX, centerY);
+
+        if (pathMeasure == null) {
+            pathMeasure = new RectF();
+        }
+
+        path.computeBounds(pathMeasure, true);
+        centerX = centerX - pathMeasure.centerX();
+        centerY = centerY - pathMeasure.centerY();
+        //substitute path offset with translate canvas because it maybe hard that the former that
+        // move whole svg to the view center after split svg as multi subPath. What the shit code!
+//        path.offset(centerX, centerY);
+
+        //good job
+        if (canvas != null) {
+            canvas.translate(centerX, centerY);
         }
     }
 
@@ -479,12 +513,34 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                     path.rLineTo(values[0], 0f);
                     break;
                 case 'V':
-                    path.lineTo(0f, values[1]);
+                    path.lineTo(0f, values[0]);
                     break;
                 case 'v':
-                    path.rLineTo(0f, values[1]);
+                    path.rLineTo(0f, values[0]);
                     break;
             }
+
+            //move to saveLastPointer()
+//            //save the last pointer
+//            if (values.length == 0) {
+//                //do nothing
+//            } else if (Character.isUpperCase(svgKey)) {
+//                if (values.length == 1) {
+//                    lastPointer[0] = svgKey == 'H' ? values[0] : lastPointer[0];
+//                    lastPointer[1] = svgKey == 'V' ? values[0] : lastPointer[1];
+//                } else {
+//                    lastPointer[0] = values[values.length - 2];
+//                    lastPointer[1] = values[values.length - 1];
+//                }
+//            } else if (Character.isLowerCase(svgKey)) {
+//                if (values.length == 1) {
+//                    lastPointer[0] += svgKey == 'h' ? values[0] : lastPointer[0];
+//                    lastPointer[1] += svgKey == 'v' ? values[0] : lastPointer[1];
+//                } else {
+//                    lastPointer[0] += values[values.length - 2];
+//                    lastPointer[1] += values[values.length - 1];
+//                }
+//            }
         }
         return path;
     }
@@ -509,35 +565,47 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         return map;
     }
 
-    private int doSave(int arraySize, String svgData, int startIndex, LinkedHashMap<String, float[]> map) {
-        int endIndex;
-        char svgkey = svgData.charAt(startIndex - 1);
-        String key = svgkey + "" + map.size();
+    /**
+     * Save svg data to {@param map} is type of {@link LinkedHashMap}.
+     * @param arraySize subPath's value count
+     * @param svgData svg data
+     * @param startIndex start index of subPath's value array
+     * @param saveMap which map is svg data save to
+     * @return start index of next subPath
+     */
+    private int saveSvg(int arraySize, String svgData, int startIndex, LinkedHashMap<String, float[]> saveMap) {
+        char keyword = svgData.charAt(startIndex);
+        String key = keyword + "" + saveMap.size();
+        int valueStartIndex = startIndex + 1;
+        int endIndex = startIndex;
 
-        //Path end or something skip.
-        if (arraySize == 0) {
-            map.put(key, new float[0]);
-            return startIndex;
+        //0 means take a 'z'/'Z' and -1 means something need to be skip.
+        if ((keyword == 'z' || keyword == 'Z') && arraySize == 0) {
+            saveMap.put(key, new float[0]);
+            return endIndex;
         } else if (arraySize == -1) {
-            return startIndex;
+//            Log.e(TAG, "Not the keyword, skip 1 char");
+            return endIndex;
         }
 
+        //get value array.
         float[] values = new float[arraySize];
-        endIndex = parseValues(svgData, values, startIndex);
+        endIndex = parseValueArray(svgData, values, valueStartIndex);
 
-        if (map.size() == 0 && firstPointer == null) {
-            firstPointer = new float[2];
-            System.arraycopy(values, 0, firstPointer, 0, values.length);
-        }
+        //shit code!
+        //save the first pointer value, it is belong to the first subPath that keyword is 'm' or 'M'
+//        if (saveMap.size() == 0 && firstPointer == null) {
+//            firstPointer = new float[2];
+//            System.arraycopy(values, 0, firstPointer, 0, values.length);
+//        }
+//        //move start pointer to (0,0). Only fix the value of pointer that keyword is upperCase char.
+//        if (Character.isUpperCase(keyword)) {
+//            for (int i = 0; i < values.length; i++) {
+//                values[i] -= firstPointer[i % 2];
+//            }
+//        }
 
-        //Move pointer to view start pos.
-        if (Character.isUpperCase(svgkey)) {
-            for (int i = 0; i < values.length; i++) {
-                values[i] -= firstPointer[i % 2];
-            }
-        }
-
-        map.put(key, values);
+        saveMap.put(key, values);
         return endIndex;
     }
 
@@ -556,61 +624,133 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         manager.add(this);
     }
 
-    private int parseValues(String data, float[] values, int startIndex) {
+    /**
+     * parse value array from string
+     * @param data svg data
+     * @param valueSave the value array which values of a subPath save to
+     * @param startIndex start index of subPath's value, it has been skip the keyword
+     * @return end index of this subPath
+     */
+    private int parseValueArray(String data, float[] valueSave, int startIndex) {
+        int arraySize = valueSave.length;
         int endIndex = 0;
-        for (int i = 0; i < values.length; i++) {
-            String regex = (i != values.length - 1) ? "," : " ";
-            endIndex = data.indexOf(regex, startIndex);
-            values[i] = Float.parseFloat(data.substring(startIndex, endIndex).replace(" ", ""));
+        for (int i = 0; i < arraySize; i++) {
+            int divSpace = data.indexOf(" ", startIndex);
+            int divComma = data.indexOf(",", startIndex);
+            endIndex = Math.min(divSpace, divComma);
+            if (divSpace == -1) {
+                endIndex = divComma;
+            } else if (divComma == -1) {
+                endIndex = divSpace;
+            }
+
+            //can't find any "," or " ", so do nothing and return current index.
+            if (endIndex == -1) { //end of data or something error.
+                return startIndex;
+            } else if (endIndex == startIndex) { //number value was not found between startIndex and endIndex.
+                if (endIndex + 1 == data.length()) {
+                    return endIndex;
+                }
+                startIndex = endIndex + 1; //skip the divide flag of "," or " "
+                i--; //loop again that not add i
+                continue;
+            }
+
+            String value = data.substring(startIndex, endIndex);
+            valueSave[i] = Float.parseFloat(value.replace(" ", ""));
             startIndex = endIndex + 1;
         }
         return endIndex;
+    }
+
+    private void saveLastPointer(LinkedHashMap<String, float[]> pathMap) {
+        /* help to divide every close-path from the svg path. */
+        if (lastPointer == null) {
+            lastPointer = new float[2];
+        }
+
+        Iterator<String> iteratorK = pathMap.keySet().iterator();
+        for (int i = 0; i < pathMap.size(); i++) {
+            String key = iteratorK.next();
+            float[] values = pathMap.get(key);
+            char keyword = key.charAt(0);
+            if (values.length == 0) {
+                //do nothing
+            } else if (Character.isUpperCase(keyword)) {
+                if (values.length == 1) {
+                    lastPointer[0] = keyword == 'H' ? values[0] : lastPointer[0];
+                    lastPointer[1] = keyword == 'V' ? values[0] : lastPointer[1];
+                } else {
+                    lastPointer[0] = values[values.length - 2];
+                    lastPointer[1] = values[values.length - 1];
+                }
+            } else if (Character.isLowerCase(keyword)) {
+                if (values.length == 1) {
+                    lastPointer[0] += keyword == 'h' ? values[0] : lastPointer[0];
+                    lastPointer[1] += keyword == 'v' ? values[0] : lastPointer[1];
+                } else {
+                    //it was already change the start pointer's value as the split path if subPath start with 'm'
+                    // but it's keyword is still 'm', so it must be take as 'M'
+                    if (i == 0 && keyword == 'm') {
+                        System.arraycopy(values, 0, lastPointer, 0, 2);
+                    } else {
+                        lastPointer[0] += values[values.length - 2];
+                        lastPointer[1] += values[values.length - 1];
+                    }
+                }
+            }
+        }
     }
 
     /**
      * Split path to the simple path that everyone is a close-path.
      */
     private Path[] splitPath() {
-        List<String> subPath = new ArrayList<>();
-
-        //Svg map path -> String[] path，每一条闭合的路径
-        String svgPath = map2String(startSvg);
+        //LinkedHashMap data -> String data list
         int startPos = 0;
-        for (int i = 0; i < svgPath.length(); i++) {
-            if (svgPath.charAt(i) == 'z' || svgPath.charAt(i) == 'Z') {
-                String dstPath = svgPath.substring(startPos, i + 1);
+        String fullPath = map2String(startSvg);
+        List<String> subPath = new ArrayList<>();
+        for (int i = 0; i < fullPath.length(); i++) {
+            if (fullPath.charAt(i) == 'z' || fullPath.charAt(i) == 'Z') {
+                String dstPath = fullPath.substring(startPos, i + 1);
                 subPath.add(dstPath);
                 startPos = i + 1;
             }
         }
 
-        //String路径 -> HashMap路径
-        //由于之前已经调整好描点位置，因此不需要再考虑起始描点的问题
-        firstPointer = new float[2];
-        List<LinkedHashMap<String, float[]>> maps = new ArrayList<>();
+        //String data list -> LinkedHashMap data
+        List<LinkedHashMap<String, float[]>> pathMaps = new ArrayList<>();
         for (int i = 0; i < subPath.size(); i++) {
             String data = subPath.get(i);
-            maps.add(string2Map(data));
+            pathMaps.add(string2Map(data));
         }
 
         /*
-         * 需要将起始描点类型从【m】转换为【M】
-         * 如果起始为‘m’，则替换此键的值为【上一个坐标值】 + 【下一个坐标值】，
+         * LinkedHashMap data -> Path
+         * 需要将子路径的起始描点类型从【m】修正为【M】
+         * get first subPath lastPointer
          */
-        for (int i = 0; i < maps.size(); i++) {
-            LinkedHashMap<String, float[]> curMap = maps.get(i);
+        lastPointer = null;
+        Path[] paths = new Path[subPath.size()];
+        saveLastPointer(pathMaps.get(0));
+        for (int i = 0; i < pathMaps.size(); i++) {
+            LinkedHashMap<String, float[]> curMap = pathMaps.get(i);
+
             float[] firstValue = (float[])curMap.values().toArray()[0];
             String firstK = (String)curMap.keySet().toArray()[0];
-            if (firstK.contains("m")) {
-                float[] lastValue = (float[])maps.get(i - 1).values().toArray()[0];
-                curMap.put(firstK, new float[] {lastValue[0] + firstValue[0], lastValue[1] + firstValue[1]});
+            if (firstK.charAt(0) == 'm') {
+                //although this code is work for there, it seems bad style as java code.(not to object-oriented)
+//                float[] newValue = curMap.get(firstK);
+//                newValue[0] = firstValue[0] + lastPointer[0];
+//                newValue[1] = firstValue[1] + lastPointer[1];
+                curMap.put(firstK, new float[] {firstValue[0] + lastPointer[0], firstValue[1] + lastPointer[1]});
             }
-        }
 
-        //HashMap -> Path
-        Path[] paths = new Path[subPath.size()];
-        for (int i = 0; i < maps.size(); i++) {
-            paths[i] = createPath(maps.get(i));
+            if (i > 0) {
+                saveLastPointer(curMap);
+            }
+
+            paths[i] = createPath(pathMaps.get(i));
         }
 
         return paths;
@@ -674,6 +814,11 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @param isReverse false is change from to dst to fully, or change from fully t dst
      */
     private void trimAnimation(int dstLen, boolean isReverse) {
+        //stop animation
+        if (isAnimRunning()) {
+            stopAnimate(false);
+        }
+
         mode = MODE_TRIM;
 
         //The svg may be the multi close-path.

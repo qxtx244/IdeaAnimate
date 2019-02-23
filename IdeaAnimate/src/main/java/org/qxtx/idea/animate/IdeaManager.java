@@ -5,7 +5,7 @@ import org.qxtx.idea.animate.animator.IdeaAnimatorManager;
 import org.qxtx.idea.animate.circularReveal.IdeaCircularRevealManager;
 import org.qxtx.idea.animate.frame.IdeaFrameManager;
 import org.qxtx.idea.animate.vector.IdeaSvgManager;
-import org.qxtx.idea.animate.vector.IdeaSvgView;
+import org.qxtx.idea.animate.view.IdeaSvgView;
 
 /**
  * @CreateDate 2019/02/20 9:09.

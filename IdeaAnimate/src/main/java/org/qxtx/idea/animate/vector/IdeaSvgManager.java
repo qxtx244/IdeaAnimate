@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 
 import org.qxtx.idea.animate.IManager;
 import org.qxtx.idea.animate.IdeaUtil;
+import org.qxtx.idea.animate.view.IdeaSvgView;
 
 import java.util.ArrayList;
 import java.util.Iterator;

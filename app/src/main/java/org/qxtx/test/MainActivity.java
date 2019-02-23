@@ -12,7 +12,7 @@ import android.widget.TextView;
 import org.qxtx.idea.animate.IdeaUtil;
 import org.qxtx.idea.animate.animation.IdeaAnimationManager;
 import org.qxtx.idea.animate.vector.IdeaSvgManager;
-import org.qxtx.idea.animate.vector.IdeaSvgView;
+import org.qxtx.idea.animate.view.IdeaSvgView;
 
 public class MainActivity extends Activity {
     private Button btn;
@@ -37,29 +37,18 @@ public class MainActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
 
         btn.setOnClickListener(v -> {
-//            IdeaAnimatorManager.rolling(btn, IdeaUtil.RIGHT, 1).setDuration(1000).start();
             if (count > 0) {
                 IdeaAnimationManager.doorClose(btn, IdeaUtil.RIGHT);
 
-//                ideaVector.startTrimAnimation(60);
-//                ideaVector.setDuration(1000).startTrimAnimation(false);
-
-//                num++;
-//                num = num == 10 ? 0 : num;
-//                IdeaSvgManager.zero2Nine(ideaVector, num);
-
-                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
-                ideaVector.postDelayed(() -> {
-                    IdeaSvgManager.scaleAnim(ideaVector, 5f);
-                }, ideaVector.getDuration() * 2);
-
+//                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
+                IdeaSvgManager.trimFullyAnim(ideaVector, false);
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
                 ideaVector.setFillColor(Color.RED);
                 ideaVector.setLineColor(Color.WHITE);
-                ideaVector.showSvg(IdeaUtil.SVG_HEART_2_BRIDE, true);
-                IdeaSvgManager.scaleAnim(ideaVector, 5f);
+                ideaVector.showSvg(IdeaUtil.SVG_SKULL, true);
+                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
                 count++;
             }
         });
