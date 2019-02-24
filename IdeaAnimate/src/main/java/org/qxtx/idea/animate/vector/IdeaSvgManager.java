@@ -45,6 +45,10 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         return manager;
     }
 
+    public static boolean checkSvgData(String svgData) {
+        return IdeaSvgView.checkPathData(svgData);
+    }
+
     public static void setDuration(@NonNull IdeaSvgView target, long duration) {
         target.setDuration(duration);
     }

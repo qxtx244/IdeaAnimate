@@ -45,12 +45,19 @@ import java.util.List;
  *   示例：
  *   "M0 0 L50 0 L50 10 L0 10,z M0 20 L50 20 L50,30 L0 30 Z "
  *
- * LinkedHashMap<String,float[]>格式路径要求：
+ * LinkedHashMap< String,float[]>格式路径要求：
  *   1、每个键值对为一条路径的完整数据，key为【keyword(+其它数据)】的字符串，value为【float[]数组】；
  *   2、以key为【m/M(+其它数据)】的键值对开始；
  *   3、最后一个键值对的key必须为【z/Z(+其它数据)】，此键值对的value不能为【null】。
  *
  *   备注：view的tag用来标记view此时的svg状态
+ *
+ * 后续需要：
+ *   1、线条允许多色（至少2段色）
+ *   2、允许为多个闭合路径填充不同颜色
+ *   3、允许图案画笔
+ *   4、svg立体化（复制路径并且布尔运算得到阴影部分区域？然后填充阴影色，并且可考虑侵倾斜)
+ *   5、遮罩动画？（利用布尔运算）
  */
 
 public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
@@ -75,7 +82,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private int fillColor;
     private float strokeWidth;
     private ValueAnimator animator;
-    private RectF pathMeasure;
+    private RectF pathRectF;
     private float[] lastPointer;
 
     public IdeaSvgView(Context context, @Nullable AttributeSet attrs) {
@@ -83,8 +90,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         init();
     }
 
-    public IdeaSvgView(Context context, String svgPath, int color, boolean isFillPath) {
+    public IdeaSvgView(Context context, String svgData, int color, boolean isFillPath) {
         super(context);
+
         init();
 
         if (isFillPath) {
@@ -93,7 +101,12 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
             lineColor = color;
         }
 
-        showSvg(svgPath, isFillPath);
+//        if (!checkPathData(svgData)) {
+//            Log.e(TAG, "Invalid svg data, draw refused.");
+//            return ;
+//        }
+
+        showSvg(svgData, isFillPath);
     }
 
     @Override
@@ -123,6 +136,65 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 }
             }
         }
+    }
+
+    /**
+     * Check weather the svg data is valid. You can call this to check weather your svg data is valid.
+     * @return svg data is valid if true, or invalid.
+     */
+    public static boolean checkPathData(String svgData) {
+        if (svgData == null) {
+            return false;
+        }
+
+        svgData = svgData.trim();
+        boolean startWithM = svgData.startsWith("m") || svgData.startsWith("M");
+        boolean endWithZ = svgData.endsWith("z") || svgData.endsWith("Z");
+
+        boolean isAllvalid = false;
+        String validChar = "MmLlCcQqHhVvZzSsTtAa.0123456789,- ";
+        for (int i = 0; i < svgData.length(); i++) {
+            String s = svgData.charAt(i) + "";
+            isAllvalid = validChar.contains(s);
+            if (!isAllvalid) {
+                break;
+            }
+        }
+
+        //一个keyword后必须包含足够多的数值个数
+        boolean isValueEnough = true;
+        String keyword = validChar.substring(0, 20);
+        int[] divNum = new int[] {1, 1, 1, 1, 5, 5, 3, 3, 0, 0, 0, 0, 0, 0, 5, 5, 3, 3, 6, 6};
+        for (int i = 0; i < svgData.length(); i++) {
+            String curKeyword = svgData.charAt(i) + "";
+            String nextKeyword;
+            if (keyword.contains(curKeyword)) {
+                int keywordValuesNum = divNum[keyword.indexOf(curKeyword)];
+                for (int j = i + 1; j < svgData.length(); j++) {
+                    nextKeyword = svgData.charAt(j) + "";
+                    if (keyword.contains(nextKeyword)) {
+                        //开始计算两者之间的分隔符个数
+                        int divCounter = 0;
+//                        Log.e(TAG, "key1= " + curKeyword + ", key2= " + nextKeyword + ", startIndex= " + startIndex + ", endIndex= " + endIndex);
+                        for (int k = i; k < j; k++) {
+                            char div = svgData.charAt(k);
+                            if (div == ' ' || div == ',') {
+                                divCounter++;
+                            }
+                        }
+                        if (divCounter < keywordValuesNum) {
+//                            Log.e(TAG, "value is not enough." + divCounter + ", " + keywordValuesNum);
+                            isValueEnough = false;
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+//        Log.e(TAG, "Invalid svg data. startWithM= " + startWithM + ", endWithZ= " + endWithZ + ", isAllvalid= " + isAllvalid + ", isValueEnough= " + isValueEnough);
+        return startWithM && endWithZ && isAllvalid && isValueEnough;
     }
 
     /**
@@ -174,10 +246,10 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
     /**
      * Show a svg immediately without animation. It will clear current svg.
-     * @param svgPath svg data
+     * @param svgData svg data
      * @param isFillPath fill color to path if true, or draw path only
      */
-    public void showSvg(@NonNull String svgPath, boolean isFillPath) {
+    public void showSvg(@NonNull String svgData, boolean isFillPath) {
         if (animator != null) {
             Log.e(TAG, "Need to show a svg but animation is running, so stop the animation!");
             animator.cancel();
@@ -194,14 +266,14 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
             paint.setColor(lineColor);
         }
 
-        startSvg = string2Map(svgPath);
-        //Debug: Check the startSvg is correct
+        startSvg = string2Map(svgData);
+        //DEBUG POINTER0: Check the startSvg
         path = createPath(startSvg);
         postInvalidate();
     }
 
-    public void showSvg(@NonNull String svgPath) {
-        showSvg(svgPath, false);
+    public void showSvg(@NonNull String svgData) {
+        showSvg(svgData, false);
     }
 
     /**
@@ -234,6 +306,11 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @param toSvg new svg data, example as "M0,0 L3,4 L5,6 z"
      */
     public void showWithAnim(@NonNull String toSvg) {
+//        if (checkPathData(toSvg)) {
+//            Log.e(TAG, "Invalid svg data, animate refused.");
+//            return ;
+//        }
+
         if (animator != null) {
             Log.e(TAG, "IdeaSvgView only can run one animate in the same time! wait for current animation?");
             return ;
@@ -248,6 +325,11 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @param toSvg new svg data, example as "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}"
      */
     public void showWithAnim(LinkedHashMap<String, float[]> toSvg) {
+//        if (checkPathData(map2String(toSvg))) {
+//            Log.e(TAG, "Invalid svg data, animate refused.");
+//            return ;
+//        }
+
         if (animator != null) {
             Log.e(TAG, "IdeaSvgView only can run one animate in the same time! wait for current animation?");
             return ;
@@ -324,7 +406,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /**
-     * It is better choice to use {@link #stopAnimateSafely()} instead of this call
+     * It is better choose to use {@link #stopAnimateSafely()} instead of this call
      *  if you wish work well whatever. Also you can call this if it is useful to call this
      *  or you really want to try it.
      *
@@ -344,6 +426,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         }
     }
 
+    /**
+     * It is a better choose than {@link #stopAnimate(boolean)} while safe has the highest priority.
+     */
     public void stopAnimateSafely() {
         stopAnimate(false);
     }
@@ -359,50 +444,55 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         .replace("Z", " Z")
         .replace("  ", " ");
 
+        String keywords = "MmLlCcQqHhVvZzSsTtAa";
+        int[] divNum = new int[] {2, 2, 2, 2, 6, 6, 4, 4, 1, 1, 1, 1, 0, 0, 6, 6, 4, 4, 7, 7};
+
         LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
         int endIndex;
         for (int i = 0; i < svgData.length(); i = endIndex + 1) {
             char svgKey = svgData.charAt(i);
             int arraySize;
-            switch (svgKey) {
-                case 'M':
-                case 'm':
-                    arraySize = 2;
-                    break;
-                case 'L':
-                case 'l':
-                    arraySize = 2;
-                    break;
-                case 'C':
-                case 'c':
-                case 'S':
-                case 's':
-                    arraySize = 6;
-                    break;
-                case 'Q':
-                case 'q':
-                case 'T':
-                case 't':
-                    arraySize = 4;
-                    break;
-                case 'Z':
-                case 'z':
-                    arraySize = 0;
-                    break;
-                case 'A':
-                case 'a':
-                    arraySize = 7;
-                    break;
-                case 'H':
-                case 'h':
-                case 'V':
-                case 'v':
-                    arraySize = 1;
-                    break;
-                default:
-                    arraySize = -1;
-                    break;
-            }
+            arraySize = divNum[keywords.indexOf(svgKey)];
+            //2019/02/24 how a shit code!
+//            switch (svgKey) {
+//                case 'M':
+//                case 'm':
+//                    arraySize = 2;
+//                    break;
+//                case 'L':
+//                case 'l':
+//                    arraySize = 2;
+//                    break;
+//                case 'C':
+//                case 'c':
+//                case 'S':
+//                case 's':
+//                    arraySize = 6;
+//                    break;
+//                case 'Q':
+//                case 'q':
+//                case 'T':
+//                case 't':
+//                    arraySize = 4;
+//                    break;
+//                case 'Z':
+//                case 'z':
+//                    arraySize = 0;
+//                    break;
+//                case 'A':
+//                case 'a':
+//                    arraySize = 7;
+//                    break;
+//                case 'H':
+//                case 'h':
+//                case 'V':
+//                case 'v':
+//                    arraySize = 1;
+//                    break;
+//                default:
+//                    arraySize = -1;
+//                    break;
+//            }
             endIndex = saveSvg(arraySize, svgData, i, map);
         }
 
@@ -439,15 +529,15 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         float centerX = getWidth() / 2f;
         float centerY = getHeight() / 2f;
 
-        if (pathMeasure == null) {
-            pathMeasure = new RectF();
+        if (pathRectF == null) {
+            pathRectF = new RectF();
         }
 
-        path.computeBounds(pathMeasure, true);
-        centerX = centerX - pathMeasure.centerX();
-        centerY = centerY - pathMeasure.centerY();
+        path.computeBounds(pathRectF, true);
+        centerX = centerX - pathRectF.centerX();
+        centerY = centerY - pathRectF.centerY();
         //substitute path offset with translate canvas because it maybe hard that the former that
-        // move whole svg to the view center after split svg as multi subPath. What the shit code!
+        //2019/02/24 move whole svg to the view center after split svg as multi subPath. What the shit code!
 //        path.offset(centerX, centerY);
 
         //good job
@@ -565,6 +655,21 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         return map;
     }
 
+    private void init() {
+        duration = DEFAULT_DURATION;
+        strokeWidth = DEFAULT_STROKE_WIDTH;
+        lineColor = Color.parseColor(DEFAULT_COLOR);
+        fillColor = Color.parseColor(DEFAULT_COLOR);
+        paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(lineColor);
+        paint.setStrokeWidth(strokeWidth);
+
+        IdeaSvgManager manager = IdeaSvgManager.getInstance();
+        this.tag = tag == null ? manager.getCount() + "" : tag;
+        manager.add(this);
+    }
+
     /**
      * Save svg data to {@param map} is type of {@link LinkedHashMap}.
      * @param arraySize subPath's value count
@@ -592,7 +697,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         float[] values = new float[arraySize];
         endIndex = parseValueArray(svgData, values, valueStartIndex);
 
-        //shit code!
+        //2019/02/24 This code was so bad because it will let you work more but really unnecessary. How a shit code!
         //save the first pointer value, it is belong to the first subPath that keyword is 'm' or 'M'
 //        if (saveMap.size() == 0 && firstPointer == null) {
 //            firstPointer = new float[2];
@@ -607,21 +712,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
         saveMap.put(key, values);
         return endIndex;
-    }
-
-    private void init() {
-        duration = DEFAULT_DURATION;
-        strokeWidth = DEFAULT_STROKE_WIDTH;
-        lineColor = Color.parseColor(DEFAULT_COLOR);
-        fillColor = Color.parseColor(DEFAULT_COLOR);
-        paint = new Paint();
-        paint.setAntiAlias(true);
-        paint.setColor(lineColor);
-        paint.setStrokeWidth(strokeWidth);
-
-        IdeaSvgManager manager = IdeaSvgManager.getInstance();
-        this.tag = tag == null ? manager.getCount() + "" : tag;
-        manager.add(this);
     }
 
     /**
@@ -730,8 +820,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
          * 需要将子路径的起始描点类型从【m】修正为【M】
          * get first subPath lastPointer
          */
-        lastPointer = null;
         Path[] paths = new Path[subPath.size()];
+        lastPointer = null;
         saveLastPointer(pathMaps.get(0));
         for (int i = 0; i < pathMaps.size(); i++) {
             LinkedHashMap<String, float[]> curMap = pathMaps.get(i);
@@ -824,7 +914,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         //The svg may be the multi close-path.
         Path[] paths = splitPath();
         trimPath = new Path[paths.length];
-        PathMeasure pathMeasure = new PathMeasure();
+        PathMeasure pathRectF = new PathMeasure();
         ValueAnimator animators = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
         animators.addUpdateListener(animator -> {
             for (int i = 0; i < paths.length; i++) {
@@ -833,9 +923,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                   below to 19 and display on the hardware-accelerated canvas. */
                 dst.rLineTo(0f, 0f);
 
-                pathMeasure.setPath(paths[i], false);
+                pathRectF.setPath(paths[i], false);
                 float fraction = animator.getAnimatedFraction();
-                float pathLen = pathMeasure.getLength();
+                float pathLen = pathRectF.getLength();
                 float startD, endD;
                 if (dstLen <= 0) { //fully trim
                     startD = 0f;
@@ -846,7 +936,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 }
 
                 if ((startD == 0f && endD == 0f)
-                        || pathMeasure.getSegment(startD, endD, dst, true)) {
+                        || pathRectF.getSegment(startD, endD, dst, true)) {
                     trimPath[i] = dst;
                 }
             }

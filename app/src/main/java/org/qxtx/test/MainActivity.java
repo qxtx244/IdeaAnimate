@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -47,8 +48,11 @@ public class MainActivity extends Activity {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
                 ideaVector.setFillColor(Color.RED);
                 ideaVector.setLineColor(Color.WHITE);
-                ideaVector.showSvg(IdeaUtil.SVG_SKULL, true);
-                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
+
+                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_BRIDE_2_HEART);
+                Log.e("TAG", "valid= " + isValid);
+//                ideaVector.showSvg(IdeaUtil.SVG_STAR, true);
+//                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
                 count++;
             }
         });
