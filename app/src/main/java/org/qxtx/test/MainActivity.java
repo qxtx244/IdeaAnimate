@@ -2,6 +2,7 @@ package org.qxtx.test;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.graphics.CornerPathEffect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -49,8 +50,9 @@ public class MainActivity extends Activity {
                 ideaVector.setFillColor(Color.RED);
                 ideaVector.setLineColor(Color.WHITE);
 
-                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_BRIDE_2_HEART);
+                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
                 Log.e("TAG", "valid= " + isValid);
+                ideaVector.showSvgWithColorful(IdeaUtil.SVG_STAR, new int[] {Color.RED, Color.GREEN, Color.BLUE});
 //                ideaVector.showSvg(IdeaUtil.SVG_STAR, true);
 //                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
                 count++;

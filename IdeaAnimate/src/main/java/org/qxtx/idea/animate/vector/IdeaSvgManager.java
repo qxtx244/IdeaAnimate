@@ -1,5 +1,6 @@
 package org.qxtx.idea.animate.vector;
 
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 
 import org.qxtx.idea.animate.IManager;
@@ -46,7 +47,7 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
     }
 
     public static boolean checkSvgData(String svgData) {
-        return IdeaSvgView.checkPathData(svgData);
+        return IdeaSvgView.checkSvgData(svgData);
     }
 
     public static void setDuration(@NonNull IdeaSvgView target, long duration) {
@@ -67,6 +68,14 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
     
     public static void showSvg(@NonNull IdeaSvgView target, String svgPath, boolean isFillPath) {
         target.showSvg(svgPath, isFillPath);
+    }
+
+    public static void showSvgWithColorful(@NonNull IdeaSvgView target, @NonNull String svgData, int[] lineColors) {
+        target.showSvgWithColorful(svgData, lineColors);
+    }
+
+    public static void showSvgWithColorful(@NonNull IdeaSvgView target, @NonNull String svgData) {
+        target.showSvgWithColorful(svgData, new int[] {Color.RED, Color.GREEN, Color.BLUE});
     }
 
     public static void showWithAnim(@NonNull IdeaSvgView target, String toSvg) {
