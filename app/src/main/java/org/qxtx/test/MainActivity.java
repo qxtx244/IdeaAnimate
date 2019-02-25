@@ -42,19 +42,18 @@ public class MainActivity extends Activity {
             if (count > 0) {
                 IdeaAnimationManager.doorClose(btn, IdeaUtil.RIGHT);
 
-//                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
-                IdeaSvgManager.trimFullyAnim(ideaVector, false);
+                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
+//                IdeaSvgManager.trimFullyAnim(ideaVector, false);
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
                 ideaVector.setFillColor(Color.RED);
                 ideaVector.setLineColor(Color.WHITE);
 
-                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
-                Log.e("TAG", "valid= " + isValid);
-                ideaVector.showSvgWithColorful(IdeaUtil.SVG_STAR, new int[] {Color.RED, Color.GREEN, Color.BLUE});
-//                ideaVector.showSvg(IdeaUtil.SVG_STAR, true);
-//                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
+//                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
+//                ideaVector.showSvgWithColorful(IdeaUtil.SVG_STAR, new int[] {Color.RED, Color.GREEN, Color.BLUE});
+                ideaVector.showSvg(IdeaUtil.SVG_HEART_2_BRIDE, false);
+                IdeaSvgManager.scaleAnim(ideaVector, 5f);
                 count++;
             }
         });

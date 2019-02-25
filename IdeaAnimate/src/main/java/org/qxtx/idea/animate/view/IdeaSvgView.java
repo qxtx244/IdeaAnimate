@@ -405,7 +405,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @param toSvg new svg data, example as "M0,0 L3,4 L5,6 z"
      */
     public void showWithAnim(@NonNull String toSvg) {
-        if (checkSvgData(toSvg)) {
+        if (!checkSvgData(toSvg)) {
             Log.e(TAG, "Invalid svg data, animate refused.");
             return ;
         }
