@@ -2,7 +2,6 @@ package org.qxtx.test;
 
 import android.app.Activity;
 import android.graphics.Color;
-import android.graphics.CornerPathEffect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -43,17 +42,16 @@ public class MainActivity extends Activity {
                 IdeaAnimationManager.doorClose(btn, IdeaUtil.RIGHT);
 
 //                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
-                IdeaSvgManager.trimFullyAnim(ideaVector, false);
+                IdeaSvgManager.trimDstAnim(ideaVector, 30);
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
                 ideaVector.setFillColor(Color.RED);
-                ideaVector.setLineColor(Color.WHITE);
+                ideaVector.setLineColor(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.WHITE, Color.CYAN, Color.MAGENTA);
 
-                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
-                Log.e("TAG", "valid= " + isValid);
-                ideaVector.showSvgWithColorful(IdeaUtil.SVG_STAR, new int[] {Color.RED, Color.GREEN, Color.BLUE});
-//                ideaVector.showSvg(IdeaUtil.SVG_STAR, true);
+//                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
+//                IdeaSvgManager.numAnim(ideaVector, 2);
+                ideaVector.showSvg(IdeaUtil.SVG_NUMBER_8, true);
 //                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
                 count++;
             }

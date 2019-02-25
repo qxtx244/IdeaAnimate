@@ -6,8 +6,8 @@ android {
         release {
             keyAlias 'idea'
             keyPassword 'lyx19951'
-//            storeFile file('D:/project/IdeaAnimate/idea.jks')
-            storeFile file('C:/project/IdeaAnimate/idea.jks')
+            storeFile file('D:/project/IdeaAnimate/idea.jks')
+//            storeFile file('C:/project/IdeaAnimate/idea.jks')
             storePassword 'lyx19951'
         }
     }

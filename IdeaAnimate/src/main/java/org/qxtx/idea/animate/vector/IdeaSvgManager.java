@@ -1,13 +1,16 @@
 package org.qxtx.idea.animate.vector;
 
-import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.util.Log;
+
+import junit.framework.Assert;
 
 import org.qxtx.idea.animate.IManager;
 import org.qxtx.idea.animate.IdeaUtil;
 import org.qxtx.idea.animate.view.IdeaSvgView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,14 +73,6 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         target.showSvg(svgPath, isFillPath);
     }
 
-    public static void showSvgWithColorful(@NonNull IdeaSvgView target, @NonNull String svgData, int[] lineColors) {
-        target.showSvgWithColorful(svgData, lineColors);
-    }
-
-    public static void showSvgWithColorful(@NonNull IdeaSvgView target, @NonNull String svgData) {
-        target.showSvgWithColorful(svgData, new int[] {Color.RED, Color.GREEN, Color.BLUE});
-    }
-
     public static void showWithAnim(@NonNull IdeaSvgView target, String toSvg) {
         target.showWithAnim(toSvg);
     }
@@ -132,10 +127,22 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
      * Number change on 0~9 with animation.
      * @param num The num change to.
      */
-    public static void numAnim(@NonNull IdeaSvgView target, int num) {
+    public static void numAnim(@NonNull IdeaSvgView target, @IdeaUtil.SvgNumber int num) {
+        Object tag = target.getTag();
+        if (tag == null) {
+            target.showSvg(IdeaUtil.SVG_NUMBER_8);
+        } else {
+            int numTag = Integer.parseInt((String) target.getTag());
+            if (numTag < 0 || numTag > 9) {
+                target.showSvg(IdeaUtil.SVG_NUMBER_8);
+            }
+        }
+
+        target.setTag(num + "");
+
         LinkedHashMap<String, float[]> map = target.string2Map(IdeaUtil.SVG_NUMBER_8);
         int[] dstIndex = IdeaUtil.NUMBER_CHOOSE[num];
-        changeNumber(dstIndex, map);
+        changeNumber(target, dstIndex, map);
         target.showWithAnim(map);
     }
 
@@ -194,13 +201,14 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         manager = null;
     }
 
-    private static void changeNumber(int[] dstIndex, LinkedHashMap<String, float[]> map) {
-        int index = 0;
+    private static void changeNumber(IdeaSvgView target, int[] dstIndex, LinkedHashMap<String, float[]> map) {
+        int index = -1;
         Iterator<String> iteratorK = map.keySet().iterator();
+        float[] firstValue = null;
         while (iteratorK.hasNext()) {
             String key = iteratorK.next();
             char keyword = key.charAt(0);
-            if (keyword == 'z' || keyword == 'Z') {
+            if (keyword == 'm' || keyword == 'M') {
                 index++;
             }
 
@@ -213,7 +221,15 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
             }
             if (findDst) {
                 float[] value = map.get(key);
-                System.arraycopy(new float[value.length], 0, value, 0, value.length);
+                if (keyword == 'm' || keyword == 'M') {
+                    firstValue = Arrays.copyOf(value, value.length);
+                }
+
+                Assert.assertNotNull("Error! Start pointer was not found!", firstValue); //firstValue must be not null in this.
+                for (int i = 0; i < value.length; i++) {
+                    value[i] = firstValue[i % 2];
+                }
+//                System.arraycopy(new float[value.length], 0, value, 0, value.length);
             }
         }
     }
