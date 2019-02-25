@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -42,17 +41,19 @@ public class MainActivity extends Activity {
                 IdeaAnimationManager.doorClose(btn, IdeaUtil.RIGHT);
 
 //                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
-                IdeaSvgManager.trimDstAnim(ideaVector, 30);
+//                IdeaSvgManager.trimDstAnim(ideaVector, 30);
+//                IdeaSvgManager.trimFullyAnim(ideaVector, false);
+                IdeaSvgManager.scaleAnim(ideaVector, 2f);
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
-                ideaVector.setFillColor(Color.RED);
-                ideaVector.setLineColor(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.WHITE, Color.CYAN, Color.MAGENTA);
+                ideaVector.setFillColor(Color.RED)
+                        .setLineColor(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.WHITE, Color.CYAN, Color.MAGENTA);
 
 //                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
 //                IdeaSvgManager.numAnim(ideaVector, 2);
-                ideaVector.showSvg(IdeaUtil.SVG_NUMBER_8, true);
-//                IdeaSvgManager.scaleAnim(ideaVector, 0.5f);
+                ideaVector.showSvg(IdeaUtil.SVG_NUMBER_8, false);
+//                ideaVector.startTrimAnim(false);
                 count++;
             }
         });
