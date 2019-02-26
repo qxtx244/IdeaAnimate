@@ -34,6 +34,6 @@
         android:id="@+id/idea"
         android:background="#000000"
         android:layout_centerInParent="true"
-        android:layout_width="500dp"
-        android:layout_height="500dp" />
+        android:layout_width="1000dp"
+        android:layout_height="match_parent" />
 </RelativeLayout>

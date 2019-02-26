@@ -56,8 +56,8 @@ import java.util.List;
  * 备注：view的tag用来标记view此时的svg状态
  *
  * 后续需要：
- *   1、问题：多色路径模式下，执行缩放动画和形变动画都会导致多色效果消失（这些方法会重置模式）；
- *   2、允许为多个闭合路径填充不同颜色
+ *   1、填充颜色的内外圈问题
+ *   2、缺少识别无标记符的连续描点的问题（目前仅依赖描点标识符来识别）
  *   3、允许图案画笔
  *   4、svg立体化（复制路径并且布尔运算得到阴影部分区域？然后填充阴影色，并且可考虑侵倾斜)
  *   5、遮罩动画？（利用布尔运算）
@@ -156,7 +156,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         /* draw path as line. */
         if (drawStyle == IdeaUtil.PAINT_FILL_AND_LINE || mode == MODE_NORMAL) {
             paint.setStyle(Paint.Style.STROKE);
-            Path[] curPath = path.length == 1 ? dstPath : path;
+            Path[] curPath = (path.length == 1 && lineColor.length > 1) ? dstPath : path;
             drawPaths(curPath, canvas, lineColor);
         }
 
@@ -480,7 +480,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
             createPath(curMap, subPaths[i]);
         }
 
-        /* it must be split more dst to set path colorfully. */
+        /* It must be split more dst to set path colorfully.
+         * When color num is 1, not split path even though single path.
+         */
         int colorNum = lineColor.length;
         if (subPaths.length == 1 && colorNum != 1) {
             if (dstPath ==null) {
