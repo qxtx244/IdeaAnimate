@@ -63,7 +63,6 @@ import java.util.List;
  *   4、svg立体化（复制路径并且布尔运算得到阴影部分区域？然后填充阴影色，并且可考虑侵倾斜)
  *   5、遮罩动画？（利用布尔运算）
  */
-
 public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private static final String TAG = "IdeaSvgPathAnimate";
 
@@ -79,15 +78,16 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private int mode;
 
     /* svg data */
-//    private String svgData;
     private LinkedHashMap<String, float[]> startSvg;
     private LinkedHashMap<String, float[]> endSvg;
 
     /* value of translate to the canvas to set svg in the view center. */
     private float[] centerPos;
 
-    /* split path to close-subPath. */
+    /* always to split path as subPath array for draw colorfully. */
     private Path[] path;
+    /* make path colorfully to split some dst while path is single close-path. */
+    private Path[] dstPath;
 
     /* path array for different mode. */
     private Path[] trimPath;
@@ -98,7 +98,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private int[] lineColor;
     private int[] fillColor;
     private float strokeWidth;
-    private boolean isFillPath;
+    private Paint.Style drawStyle;
 
     /* Animation */
     private ValueAnimator animator;
@@ -109,9 +109,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
     private PathMeasure pathMeasure;
 
-    private long lastTime = 0;
-
-    List<LinkedHashMap<String, float[]>> subPathMap;
+    private List<LinkedHashMap<String, float[]>> subPathMap;
+//    private long timeCounter = 0;
+//    private long timeDrawOnce = 0;
 
     public IdeaSvgView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -123,18 +123,21 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         init();
 
         colors = colors == null ? new int[] {Color.parseColor(DEFAULT_COLOR)} : colors;
-        int[] color = Arrays.copyOf(colors, colors.length);
+        int[] color = Arrays.copyOf(colors, colors.length); //deep-copy to forbidden to change view data by outside
         if (isFillPath) {
             fillColor = color;
+            drawStyle = Paint.Style.FILL;
         } else {
             lineColor = color;
+            drawStyle = Paint.Style.STROKE;
         }
-
-        showSvg(svgData, isFillPath);
+        showSvg(svgData, drawStyle);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+//        timeDrawOnce = SystemClock.currentThreadTimeMillis();
+
         super.onDraw(canvas);
 
         if (path == null) {
@@ -144,27 +147,28 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         /* Translate canvas to set svg in the view center. */
         canvas.translate(centerPos[0], centerPos[1]);
 
-        int color;
+        /* if not the MODE_NORMAL, only set true to isFillPath can draw path once, or draw path once whatever. */
+        boolean notLine = drawStyle != IdeaUtil.PAINT_LINE;
+        if (notLine) {
+            paint.setStyle(Paint.Style.FILL);
+            drawPaths(path, canvas, fillColor);
+        }
 
-        /*
-         * if not the MODE_NORMAL, only set true to isFillPath can draw path once, or draw path once whatever.
-         */
-        if (isFillPath || mode == MODE_NORMAL) {
-            int[] colorsType = isFillPath ? fillColor : lineColor;
-            paint.setStyle(isFillPath ? Paint.Style.FILL : Paint.Style.STROKE);
-            for (int i = 0; i < path.length; i++) {
-                color = i >= colorsType.length ? colorsType[0] : colorsType[i];
-                paint.setColor(color);
-                canvas.drawPath(path[i], paint);
-            }
+        /* draw path as line. */
+        if (drawStyle == IdeaUtil.PAINT_FILL_AND_LINE || mode == MODE_NORMAL) {
+            paint.setStyle(Paint.Style.STROKE);
+            Path[] curPath = path.length == 1 ? dstPath : path;
+            drawPaths(curPath, canvas, lineColor);
         }
 
         //Extra mode：trim dst
         switch (mode) {
             case MODE_TRIM:
-                drawPaths(trimPath, canvas);
+                drawPaths(trimPath, canvas, lineColor);
                 break;
         }
+
+//        Log.e(TAG, "draw time use: " + (SystemClock.currentThreadTimeMillis() - timeDrawOnce) + " ms");
     }
 
     /**
@@ -222,7 +226,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 break;
             }
         }
-
         if (!isAllCharValid) {
             Log.e(TAG, "Invalid svg data. Find some invalid character.");
             return false;
@@ -279,7 +282,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @return svg data that type of String
      */
     public String getSvgString() {
-//        return svgData;
         return map2String(startSvg);
     }
 
@@ -304,22 +306,25 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     public void showSvg(@NonNull String svgData) {
-        showSvg(svgData, false);
+        showSvg(svgData, drawStyle);
     }
 
     /**
      * Show a svg immediately without animation. It will clear current svg.
      * @param svgData svg data
-     * @param isFillPath fill color to path if true, or draw path only
+     * @param drawStyle see {@link Paint.Style}
+     *
+     * @see org.qxtx.idea.animate.IdeaUtil#PAINT_LINE
+     * @see org.qxtx.idea.animate.IdeaUtil#PAINT_FILL
+     * @see org.qxtx.idea.animate.IdeaUtil#PAINT_FILL_AND_LINE
      */
-    public void showSvg(@NonNull String svgData, boolean isFillPath) {
+    public void showSvg(@NonNull String svgData, Paint.Style drawStyle) {
         if (!checkSvgData(svgData)) {
             Log.e(TAG, "Invalid svg data, show svg refused.");
             return ;
         }
 
-        this.isFillPath = isFillPath;
-//        this.svgData = svgData;
+        this.drawStyle = drawStyle;
         startSvg = string2Map(svgData);
         path = splitPath(startSvg);
 
@@ -425,15 +430,14 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
             return null;
         }
 
-        String fullPath = map2String(pathMap);
-
-        int startPos = 0;
         if (subPathMap == null) {
             subPathMap = new ArrayList<>();
         } else {
             subPathMap.clear();
         }
 
+        int startPos = 0;
+        String fullPath = map2String(pathMap);
         for (int i = 0; i < fullPath.length(); i++) {
             if (fullPath.charAt(i) == 'z' || fullPath.charAt(i) == 'Z') {
                 String subPath = fullPath.substring(startPos, i + 1);
@@ -475,6 +479,31 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
             subPaths[i] = new Path();
             createPath(curMap, subPaths[i]);
+        }
+
+        /* it must be split more dst to set path colorfully. */
+        int colorNum = lineColor.length;
+        if (subPaths.length == 1 && colorNum != 1) {
+            if (dstPath ==null) {
+                dstPath = new Path[colorNum];
+                for (int i = 0; i < dstPath.length; i++) {
+                    dstPath[i] = new Path();
+                }
+            }
+
+            if (pathMeasure == null) {
+                pathMeasure = new PathMeasure();
+            }
+            pathMeasure.setPath(subPaths[0], false);
+            float unitLen = pathMeasure.getLength() / colorNum;
+            float startD = 0f;
+            for (int i = 0; i < dstPath.length; i++) {
+                dstPath[i].reset();
+                dstPath[i].rewind();
+//                dstPath[i] = new Path();
+                pathMeasure.getSegment(startD, startD + unitLen, dstPath[i], true);
+                startD += unitLen;
+            }
         }
 
         return subPaths;
@@ -677,16 +706,11 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /** @see #onDraw(Canvas). */
-    private void drawPaths(Path[] paths, Canvas canvas) {
-        if (paths == null || canvas == null) {
-            return ;
-        }
-
+    private void drawPaths(@NonNull Path[] paths, @NonNull Canvas canvas, @NonNull int[] colors) {
         int color;
-        paint.setStyle(Paint.Style.STROKE);
         //it maybe cause exception as canvas is null. I don't know why it happen.
         for (int i = 0; i < paths.length; i++) {
-            color = i >= lineColor.length ? Color.parseColor(DEFAULT_COLOR) : lineColor[i];
+            color = i >= colors.length ? colors[0] : colors[i];
             paint.setColor(color);
             canvas.drawPath(paths[i], paint);
         }
@@ -701,7 +725,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
         centerPos = new float[2];
 
-        isFillPath = false;
+        drawStyle = IdeaUtil.PAINT_LINE;
         paint = new Paint();
         paint.setAntiAlias(true);
         paint.setStyle(Paint.Style.STROKE);
@@ -828,7 +852,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     /**
      * Translate canvas to set path in the view center.
      *
-     * @see #showSvg(String, boolean)
+     * @see #showSvg(String, Paint.Style)
      */
     private void getCanvasTranslate(LinkedHashMap<String, float[]> svgMap) {
         Path measurePath;
@@ -868,6 +892,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
         animator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
         animator.addUpdateListener(animation -> {
+//            timeCounter = SystemClock.currentThreadTimeMillis();
+
             newSvg.clear();
             float fraction = animation.getAnimatedFraction();
 
@@ -889,13 +915,16 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 newSvg.put(iteratorK.next(), newValue);
             }
 
-            /* 这里如果只做一条path，则将失去多色路径的作用，所以变化过程中只使用一个路径，在最后一帧时才重新配置多色路径. */
+            /* 这里如果只存在一条path，则将失去多色路径的作用，所以变化过程中只使用一个路径，在最后一帧时才重新配置多色路径. */
             getCanvasTranslate(newSvg);
             path = splitPath(newSvg);
 
             postInvalidate();
+
+//            Log.e(TAG, "value once time use: " + (SystemClock.currentThreadTimeMillis() - timeCounter) + " ms"
+//                  + ", counter= ");
         });
-        animator.addListener(new ListenerAdapter(this, false));
+        animator.addListener(new ListenerAdapter(this));
         animator.start();
     }
 
@@ -961,61 +990,35 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
             }
             postInvalidate();
         });
-        animator.addListener(new ListenerAdapter(this, true));
+        animator.addListener(new ListenerAdapter(this));
         animator.start();
     }
 
     /** @see ListenerAdapter */
-    void onAnimEnd(boolean isTrim) {
-        if (!isTrim) {
+    void onAnimEnd() {
+        if (mode != MODE_TRIM) {
             startSvg = deepCopy(endSvg);
             endSvg.clear();
         }
         animator = null;
     }
 
-    private void checkColorful(String svgData) {
-        /* when multi color, we want to check if it has multi close-subPath in the path to choose different style. */
-//        int dstCount = lineColor.length;
-//        if (dstCount > 1) {
-//            colorfulPath = new Path[dstCount];
-//            int subPathNum = checkSubPathNum(svgData);
-//            if (subPathNum == 1) {
-//                if (pathMeasure == null) {
-//                    pathMeasure = new PathMeasure();
-//                }
-//                pathMeasure.setPath(path, false);
-//                float unitLen = pathMeasure.getLength() / dstCount;
-//                float startLen = 0f;
-//                for (int i = 0; i < dstCount; i++) {
-//                    colorfulPath[i] = new Path();
-//                    pathMeasure.getSegment(startLen, startLen + unitLen, colorfulPath[i], true);
-//                    startLen += unitLen;
-//                }
-//            } else if (subPathNum > 1) {
-//                colorfulPath = splitPath(string2Map(svgData));
-//            }
-//        }
-    }
-
     private static class ListenerAdapter extends AnimatorListenerAdapter {
         private WeakReference<IdeaSvgView> ideaSvgView;
-        private boolean isTrim;
 
-        ListenerAdapter(IdeaSvgView ideaSvgView, boolean isTrim) {
+        ListenerAdapter(IdeaSvgView ideaSvgView) {
             this.ideaSvgView = new WeakReference<>(ideaSvgView);
-            this.isTrim = isTrim;
         }
         @Override
         public void onAnimationEnd(Animator animation) {
             if (ideaSvgView != null && ideaSvgView.get() != null) {
-                ideaSvgView.get().onAnimEnd(isTrim);
+                ideaSvgView.get().onAnimEnd();
             }
         }
         @Override
         public void onAnimationCancel(Animator animation) {
             if (ideaSvgView != null && ideaSvgView.get() != null) {
-                ideaSvgView.get().onAnimEnd(isTrim);
+                ideaSvgView.get().onAnimEnd();
             }
         }
     }

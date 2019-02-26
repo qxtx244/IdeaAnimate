@@ -1,5 +1,6 @@
 package org.qxtx.idea.animate.vector;
 
+import android.graphics.Paint;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -66,11 +67,11 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
     }
 
     public static void showSvg(@NonNull IdeaSvgView target, String svgPath) {
-        showSvg(target, svgPath, false);
+        showSvg(target, svgPath, IdeaUtil.PAINT_LINE);
     }
     
-    public static void showSvg(@NonNull IdeaSvgView target, String svgPath, boolean isFillPath) {
-        target.showSvg(svgPath, isFillPath);
+    public static void showSvg(@NonNull IdeaSvgView target, String svgPath, Paint.Style drawStyle) {
+        target.showSvg(svgPath, drawStyle);
     }
 
     public static void showWithAnim(@NonNull IdeaSvgView target, String toSvg) {
@@ -85,7 +86,7 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
      * Change from menu and arrows with click. It dependent the target's target.
      */
     public static void par2arrowsAnim(@NonNull IdeaSvgView target) {
-        target.showSvg(IdeaUtil.SVG_PAR, true);
+        target.showSvg(IdeaUtil.SVG_PAR, IdeaUtil.PAINT_FILL);
         target.setTag("svg_par");
         target.setOnClickListener(v -> {
             String tag = target.getTag().toString();

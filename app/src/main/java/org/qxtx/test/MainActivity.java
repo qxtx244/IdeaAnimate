@@ -3,6 +3,7 @@ package org.qxtx.test;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Button;
@@ -20,7 +21,7 @@ public class MainActivity extends Activity {
     private IdeaSvgView ideaVector;
     int count = 0;
     View view;
-    int num = -1;
+    int num = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,20 +41,29 @@ public class MainActivity extends Activity {
             if (count > 0) {
                 IdeaAnimationManager.doorClose(btn, IdeaUtil.RIGHT);
 
-//                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_BRIDE_2_HEART);
-//                IdeaSvgManager.trimDstAnim(ideaVector, 30);
+//                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_HEART_2_BRIDE);
+//                IdeaSvgManager.trimDstAnim(ideaVector, 500);
 //                IdeaSvgManager.trimFullyAnim(ideaVector, false);
-                IdeaSvgManager.scaleAnim(ideaVector, 2f);
+                new Thread(() -> {
+                    for (int i = 0; i < 9; i++) {
+                        num = i;
+                        ideaVector.post(() -> {
+                            IdeaSvgManager.numAnim(ideaVector, num);
+                        });
+                        SystemClock.sleep(ideaVector.getDuration() * 2);
+                    }
+                }).start();
+
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
-                ideaVector.setFillColor(Color.RED)
+                ideaVector.setFillColor(Color.WHITE, Color.RED)
                         .setLineColor(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.WHITE, Color.CYAN, Color.MAGENTA);
 
 //                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
 //                IdeaSvgManager.numAnim(ideaVector, 2);
-                ideaVector.showSvg(IdeaUtil.SVG_NUMBER_8, false);
-//                ideaVector.startTrimAnim(false);
+                ideaVector.showSvg(IdeaUtil.SVG_NUMBER_8, IdeaUtil.PAINT_FILL);
+//                ideaVector.scale(5f);
                 count++;
             }
         });

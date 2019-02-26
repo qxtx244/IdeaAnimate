@@ -1,6 +1,7 @@
 package org.qxtx.idea.animate;
 
 import android.animation.ValueAnimator;
+import android.graphics.Paint;
 import android.support.annotation.IntDef;
 import android.support.annotation.StringDef;
 import android.view.Gravity;
@@ -47,6 +48,10 @@ public class IdeaUtil {
     public static final String TYPE_ALPHA = "Alpha";
     public static final String TYPE_SCALE = "Scale";
     public static final String TYPE_CIRCUAL_REVERAL = "CircularReveral";
+
+    public static final Paint.Style PAINT_LINE = Paint.Style.STROKE;
+    public static final Paint.Style PAINT_FILL = Paint.Style.FILL;
+    public static final Paint.Style PAINT_FILL_AND_LINE = Paint.Style.FILL_AND_STROKE;
 
     public static final int LEVEL_MIN = 1;
     public static final int LEVEL_MAX = 10;
