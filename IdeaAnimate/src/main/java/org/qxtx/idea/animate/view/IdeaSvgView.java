@@ -10,14 +10,13 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.RectF;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 
 import org.qxtx.idea.animate.IdeaUtil;
-import org.qxtx.idea.animate.vector.IdeaSvgManager;
+import org.qxtx.idea.animate.svg.IdeaSvgManager;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;

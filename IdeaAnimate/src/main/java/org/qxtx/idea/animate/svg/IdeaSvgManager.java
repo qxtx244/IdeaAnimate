@@ -1,8 +1,7 @@
-package org.qxtx.idea.animate.vector;
+package org.qxtx.idea.animate.svg;
 
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import junit.framework.Assert;
 
@@ -32,8 +31,8 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
     private static final long DEFAULT_DELAY = 1000;
     private static final String DEFAULT_COLOR = "#1E90FF";
     private static final float DEFAULT_STROKE_WIDTH = 3f;
-    public static IdeaSvgManager manager;
-    public List<IdeaSvgView> list;
+    private static IdeaSvgManager manager;
+    private List<IdeaSvgView> list;
 
     private IdeaSvgManager() {
         list = new ArrayList<>();

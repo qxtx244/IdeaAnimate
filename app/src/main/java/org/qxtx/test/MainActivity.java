@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import org.qxtx.idea.animate.IdeaUtil;
 import org.qxtx.idea.animate.animation.IdeaAnimationManager;
-import org.qxtx.idea.animate.vector.IdeaSvgManager;
+import org.qxtx.idea.animate.svg.IdeaSvgManager;
 import org.qxtx.idea.animate.view.IdeaSvgView;
 
 public class MainActivity extends Activity {
