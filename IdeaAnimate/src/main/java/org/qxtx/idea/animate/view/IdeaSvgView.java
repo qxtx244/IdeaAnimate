@@ -9,6 +9,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -57,13 +59,16 @@ import java.util.List;
  *
  * 后续需要：
  *   1、填充颜色的内外圈问题
- *   2、缺少识别无标记符的连续描点的问题（目前仅依赖描点标识符来识别）
+ *   3、缩放的时候由于即时检测居中的问题，图形可能会抖动
  *   3、允许图案画笔
  *   4、svg立体化（复制路径并且布尔运算得到阴影部分区域？然后填充阴影色，并且可考虑侵倾斜)
  *   5、遮罩动画？（利用布尔运算）
  */
 public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private static final String TAG = "IdeaSvgPathAnimate";
+
+    private static final char DIV_COMMA = ',';
+    private static final char DIV_SPACE = ' ';
 
     private static final int MODE_NORMAL = 0;
     private static final int MODE_TRIM = 1;
@@ -109,6 +114,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private PathMeasure pathMeasure;
 
     private List<LinkedHashMap<String, float[]>> subPathMap;
+    private Paint tempPaint;
+    private PorterDuffXfermode tempPorterDuffXfermode;
 //    private long timeCounter = 0;
 //    private long timeDrawOnce = 0;
 
@@ -154,16 +161,48 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         }
 
         /* draw path as line. */
-        if (drawStyle == IdeaUtil.PAINT_FILL_AND_LINE || mode == MODE_NORMAL) {
+//        if (drawStyle == IdeaUtil.PAINT_FILL_AND_LINE || mode == MODE_NORMAL) {
+        if (drawStyle != IdeaUtil.PAINT_FILL && mode == MODE_NORMAL) {
             paint.setStyle(Paint.Style.STROKE);
             Path[] curPath = (path.length == 1 && lineColor.length > 1) ? dstPath : path;
             drawPaths(curPath, canvas, lineColor);
         }
 
-        //Extra mode：trim dst
+        /* Extra mode：trim dst
+         * 1、MODE_TRIM:
+         *   If drawStyle is Paint.Style.FILL, it will take a trim in fill-style, or  trim in line-style.
+         */
         switch (mode) {
             case MODE_TRIM:
-                drawPaths(trimPath, canvas, lineColor);
+                int[] colors = drawStyle == IdeaUtil.PAINT_FILL ? fillColor : lineColor;
+                if (drawStyle == IdeaUtil.PAINT_FILL_AND_LINE) {
+                    paint.setStyle(IdeaUtil.PAINT_LINE);
+                }
+
+                if (drawStyle == IdeaUtil.PAINT_FILL) {
+                    if (tempPaint == null) {
+                        tempPaint = new Paint();
+                        tempPorterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.CLEAR);
+                    }
+                    tempPaint.setXfermode(tempPorterDuffXfermode);
+                    canvas.drawPaint(tempPaint);
+                }
+
+                drawPaths(trimPath, canvas, colors);
+
+                //trim and draw the single path
+                if (path.length == 1 && drawStyle != IdeaUtil.PAINT_FILL) {
+                    if (pathMeasure == null) {
+                        pathMeasure = new PathMeasure();
+                    }
+                    pathMeasure.setPath(path[0], false);
+                    float len = pathMeasure.getLength();
+                    pathMeasure.setPath(trimPath[0], false);
+                    float dstLen = pathMeasure.getLength();
+                    if (dstLen == len) {
+                        drawPaths(dstPath, canvas, lineColor);
+                    }
+                }
                 break;
         }
 
@@ -246,7 +285,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                         int divCounter = 0;
                         for (int k = i; k < j; k++) {
                             char div = svgData.charAt(k);
-                            if (div == ' ' || div == ',') {
+                            if (div == DIV_SPACE || div == DIV_COMMA) {
                                 divCounter++;
                             }
                         }
@@ -301,7 +340,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @return true means view is playing animation, or not
      */
     public boolean isAnimRunning() {
-        return animator != null && !animator.isPaused() && !animator.isRunning() && !animator.isStarted();
+        return animator != null;
     }
 
     public void showSvg(@NonNull String svgData) {
@@ -521,6 +560,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      */
     public void stopAnimate(boolean forceStop) {
         if (!isAnimRunning()) {
+            Log.e(TAG, "IdeaSvgView is idle, not need to stop animation.");
             return ;
         }
 
@@ -556,10 +596,16 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         return curPath.toString();
     }
 
+    //LYX_TODO:2019/2/26 23:12 What wrong there? It must be according to the rule by SVG converter.
     /**
      * TOOL 8: Convert data type to {@link LinkedHashMap}.
-     * @param data data that type of string
+     * @param data data that type of string\
+     *
      * @return object of {@link LinkedHashMap}
+     *
+     * @see #showSvg(String)
+     * @see #showWithAnim
+     * @see #splitPath(LinkedHashMap)
      */
     public LinkedHashMap<String, float[]> string2Map(@NonNull String data) {
         data = data.trim()
@@ -571,18 +617,28 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         final int[] divNum = new int[] {2, 2, 2, 2, 6, 6, 4, 4, 1, 1, 1, 1, 0, 0, 6, 6, 4, 4, 7, 7};
         LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
 
+        char lastChar = 'm';
         int endIndex;
         for (int i = 0; i < data.length(); i = endIndex + 1) {
-            char svgKey = data.charAt(i);
+            char findChar = data.charAt(i);
             int arraySize;
 
-            int index = keywords.indexOf(svgKey);
+            /* If character is divider, skip it. If character is not the keyword, use the last keyword. */
+            int index = keywords.indexOf(findChar);
             if (index == -1) {
-                arraySize = -1;
+                /* maybe the next pointer or divider, it use the same keyword as last point and not to set the keyword, add for it. */
+                if (!keywords.contains(findChar + "") && findChar != DIV_SPACE && findChar != DIV_COMMA) {
+                    arraySize = divNum[keywords.indexOf(lastChar)];
+                    findChar = lastChar;
+                    i -= 1;
+                } else {
+                    arraySize = -1;
+                }
             } else {
                 arraySize = divNum[index];
+                lastChar = findChar;
             }
-            endIndex = saveSvg(arraySize, data, i, map);
+            endIndex = saveSvg(arraySize, data, findChar, i, map);
         }
 
         return map;
@@ -707,7 +763,11 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /** @see #onDraw(Canvas). */
-    private void drawPaths(@NonNull Path[] paths, @NonNull Canvas canvas, @NonNull int[] colors) {
+    private void drawPaths(Path[] paths, @NonNull Canvas canvas, @NonNull int[] colors) {
+        if (paths == null || paths.length == 0) {
+            return ;
+        }
+
         int color;
         //it maybe cause exception as canvas is null. I don't know why it happen.
         for (int i = 0; i < paths.length; i++) {
@@ -745,7 +805,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @param startIndex start index of subPath's value, it has been skip the keyword
      * @return end index of this subPath
      *
-     * @see #saveSvg(int, String, int, LinkedHashMap)
+     * @see #saveSvg(int, String, char, int, LinkedHashMap)
      */
     private int parseValueArray(@NonNull String data, @NonNull float[] valueSave, int startIndex) {
         int arraySize = valueSave.length;
@@ -789,17 +849,18 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      *
      * @see #string2Map(String)
      */
-    private int saveSvg(int arraySize, @NonNull String svgData, int startIndex, @NonNull LinkedHashMap<String, float[]> saveMap) {
-        char keyword = svgData.charAt(startIndex);
-        String key = keyword + "" + saveMap.size();
+    private int saveSvg(int arraySize, @NonNull String svgData, char keyword, int startIndex, @NonNull LinkedHashMap<String, float[]> saveMap) {
         int valueStartIndex = startIndex + 1;
         int endIndex = startIndex;
+        if (arraySize == -1) {
+            return endIndex;
+        }
+
+        String key = keyword + "" + saveMap.size();
 
         //0 means take a 'z'/'Z' and -1 means something need to be skip.
         if ((keyword == 'z' || keyword == 'Z') && arraySize == 0) {
             saveMap.put(key, new float[0]);
-            return endIndex;
-        } else if (arraySize == -1) {
             return endIndex;
         }
 
@@ -989,6 +1050,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                     trimPath[i] = dst;
                 }
             }
+
             postInvalidate();
         });
         animator.addListener(new ListenerAdapter(this));

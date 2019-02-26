@@ -49,11 +49,11 @@ public class MainActivity extends Activity {
                  + "m144 -198 c-14 -53 -91 -86 -124 -53 c-23 23 -12 45 48 98 c41 35 63 62 68 84 c5 24 8 16 10 -39 c2 -38 1 -79 -2 -90z "
                  + "M390 761 c-54 -17 -115 -55 -162 -102 c-172 -172 -144 -459 60 -597 c79 -54 120 -65 238 -60 c80 2 108 8 146 27 c79 41 143 105 182 183 c34 67 36 76 36 173 c0 97 -2 106 -35 172 c-42 84 -102 143 -188 184 c-56 26 -72 29 -157 28 c-52 0 -106 -4 -120 -8z ";
 
-        boolean b = IdeaSvgView.checkSvgData(SVG_GOS);
-        Log.e("TAG", b + "");
-        ideaVector
-                .setFillColor(Color.WHITE, Color.parseColor("#60a0e0"))
-                .showSvg(SVG_GOS, IdeaUtil.PAINT_FILL_AND_LINE);
+//        boolean b = IdeaSvgView.checkSvgData(SVG_GOS);
+//        Log.e("TAG", b + "");
+//        ideaVector
+//                .setFillColor(Color.WHITE, Color.parseColor("#60a0e0"))
+//                .showSvg(SVG_GOS, IdeaUtil.PAINT_FILL_AND_LINE);
 //        ideaVector.scale(0.1f);
 
         btn.setOnClickListener(v -> {
@@ -62,27 +62,33 @@ public class MainActivity extends Activity {
 
 //                IdeaSvgManager.showWithAnim(ideaVector, IdeaUtil.SVG_HEART_2_BRIDE);
 //                IdeaSvgManager.trimDstAnim(ideaVector, 500);
+//                ideaVector.setFillColor(Color.YELLOW);
 //                IdeaSvgManager.trimFullyAnim(ideaVector, false);
                 new Thread(() -> {
-                    for (int i = 0; i < 9; i++) {
+                    for (int i = 0; i < 10; i++) {
                         num = i;
                         ideaVector.post(() -> {
                             IdeaSvgManager.numAnim(ideaVector, num);
+                            if (num > 3) {
+                                ideaVector.stopAnimateSafely();
+                            }
                         });
-                        SystemClock.sleep(ideaVector.getDuration() * 2);
+                        SystemClock.sleep(ideaVector.getDuration() * 3);
                     }
                 }).start();
 
                 count = 0;
             } else {
                 IdeaAnimationManager.doorOpen(btn, IdeaUtil.RIGHT);
-                ideaVector.setFillColor(Color.WHITE, Color.RED)
+
+                ideaVector.setDuration(500);
+                ideaVector.setFillColor(Color.WHITE, Color.RED, Color.RED, Color.RED, Color.RED, Color.RED)
                         .setLineColor(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.WHITE, Color.CYAN, Color.MAGENTA);
 
 //                boolean isValid = IdeaSvgManager.checkSvgData(IdeaUtil.SVG_NUMBER_8);
 //                IdeaSvgManager.numAnim(ideaVector, 2);
                 ideaVector.showSvg(IdeaUtil.SVG_NUMBER_8, IdeaUtil.PAINT_FILL);
-//                ideaVector.scale(5f);
+                ideaVector.scale(2f);
                 count++;
             }
         });

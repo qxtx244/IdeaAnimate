@@ -59,7 +59,8 @@ public class IdeaUtil {
 
     public static final int DEFAULT_DURATION = 500;
 
-    public static final String SVG_TEST = "M100 100 l50,0 L150,150 Z";
+    public static final String SVG_TEST = "M 48.0, 54.0, L31.0,42.0 15.0,54.0   21.0,35.0 6.0,23.0 " +
+            "L25.0,23.0 L25.0,23.0,L25.0,23.0 L25.0,23.0 L32.0,4.0 L40.0,23.0 L58.0,23.0 L42.0,35.0 L48.0,54.0Z ";
 
     public static final String SVG_HEART = "M0,0 c-1.955,0,-3.83,1.268,-4.5,3 c-0.67,-1.732,-2.547,-3,-4.5,-3 C-11.543,0,-13.5,1.932,-13.5,4.5 " +
             "c0,3.53,3.793,6.257,9,11.5 c5.207,-5.242,9,-7.97,9,-11.5 C4.5,1.932,2.543,0,0,0z";
