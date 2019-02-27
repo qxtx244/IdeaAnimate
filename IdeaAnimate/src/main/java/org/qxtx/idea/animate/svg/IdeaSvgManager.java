@@ -57,8 +57,12 @@ public class IdeaSvgManager implements IManager<IdeaSvgView> {
         target.setDuration(duration);
     }
 
-    public static void setColor(@NonNull IdeaSvgView target, int lineColor, int fillColor) {
-        target.setLineColor(lineColor).setFillColor(fillColor);
+    public static void setLineColor(@NonNull IdeaSvgView target, int... lineColors) {
+        target.setLineColor(lineColors);
+    }
+
+    public static void setFillColor(@NonNull IdeaSvgView target, int... fillColors) {
+        target.setLineColor(fillColors);
     }
 
     public static void setStrokeWidth(@NonNull IdeaSvgView target, int width) {

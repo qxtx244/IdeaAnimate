@@ -105,7 +105,9 @@ public class IdeaUtil {
     @IntDef({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
     public @interface SvgNumber {}
 
-    public static final String VALID_CHAR = "MmLlCcQqHhVvZzSsTtAa.0123456789,- ";
+    /** not support keyword T and S because i don't want to parse their value. */
+    public static final String VALID_CHAR = "MmLlCcQqHhVvZzAa.0123456789,- ";
+//    public static final String VALID_CHAR = "MmLlCcQqHhVvZzSsTtAa.0123456789,- ";
 
     public static final String SVG_NUMBER_8 =
             //最上行

@@ -271,8 +271,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
         /* check whether all the value array is size enough. */
         boolean isValueEnough = true;
-        String keyword = IdeaUtil.VALID_CHAR.substring(0, 20);
-        final int[] divNum = new int[] {1, 1, 1, 1, 5, 5, 3, 3, 0, 0, 0, 0, 0, 0, 5, 5, 3, 3, 6, 6};
+        String keyword = IdeaUtil.VALID_CHAR.substring(0, 16);
+        final int[] divNum = new int[] {1, 1, 1, 1, 5, 5, 3, 3, 0, 0, 0, 0, 0, 0, 6, 6};
         for (int i = 0; i < svgData.length(); i++) {
             String curKeyword = svgData.charAt(i) + "";
             String nextKeyword;
@@ -336,11 +336,97 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /**
-     * TOOL 5: Check whether the view is playing animation.
+     * TOOL 6: Check whether the view is playing animation.
      * @return true means view is playing animation, or not
      */
     public boolean isAnimRunning() {
         return animator != null;
+    }
+
+    /**
+     * TOOL 5: Convert data type to String.
+     * @param data data type of LinkedHashMap
+     * @return svg data that type of {@link String}
+     */
+    public String map2String(@NonNull LinkedHashMap<String, float[]> data) {
+        StringBuilder curPath = new StringBuilder();
+        for (String key : data.keySet()) {
+            float[] values = data.get(key);
+            curPath.append(key.charAt(0));
+            for (float value : values) {
+                curPath.append(value).append(" ");
+            }
+        }
+        return curPath.toString();
+    }
+
+    /**
+     * Set duration of a animation, must be positive.
+     */
+    public IdeaSvgView setDuration(long duration) {
+        if (duration < 0) {
+            Log.e(TAG, "Duration must be positive! set refused.");
+        }
+        this.duration = duration;
+        return this;
+    }
+
+    /**
+     * Set color of path fill. When more than one of fill color, it may fill path colorfully.
+     */
+    public IdeaSvgView setFillColor(@NonNull int... fillColor) {
+        if (fillColor.length > 0) {
+            this.fillColor = Arrays.copyOf(fillColor, fillColor.length);
+        }
+        return this;
+    }
+
+    /**
+     * Extra animation. Scale svg with animation.
+     * @param scale must be positive, in float
+     */
+    public void scale(float scale) {
+        if (startSvg == null) {
+            Log.e(TAG, "Svg not found, please call showSvg() to set a svg first. Scale refused.");
+            return ;
+        }
+        if (scale < 0f) {
+            Log.e(TAG, "Value of scale must be positive! scale refused.");
+            return ;
+        }
+
+        LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
+        Iterator<float[]> iteratorV = startSvg.values().iterator();
+        for (String key : startSvg.keySet()) {
+            float[] values = iteratorV.next();
+            float[] newValues = new float[values.length];
+            for (int i = 0; i < values.length; i++) {
+                newValues[i] = values[i] * scale;
+            }
+            newSvg.put(key, newValues);
+        }
+
+        showWithAnim(newSvg);
+    }
+
+    /**
+     * Set color of path. When more than one of line color, it may draw path colorfully.
+     */
+    public IdeaSvgView setLineColor(@NonNull int... lineColor) {
+        if (lineColor.length > 0) {
+            this.lineColor = Arrays.copyOf(lineColor, lineColor.length);
+        }
+        return this;
+    }
+
+    /**
+     * Set stroke width of paint, must be positive.
+     */
+    public IdeaSvgView setStrokeWidth(float strokeWidth) {
+        if (strokeWidth > 0f) {
+            this.strokeWidth = strokeWidth;
+        }
+        return this;
     }
 
     public void showSvg(@NonNull String svgData) {
@@ -399,67 +485,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 //        svgData = toSvg;
         endSvg = string2Map(toSvg);
         svgAnimation();
-    }
-
-    public void startTrimAnim() {
-        startTrimAnim(false);
-    }
-
-    /**
-     * Trim path that len min of 0 and max of the whole path.
-     * @param isReverse len of trim from whole path to 0 if true, or reverse
-     */
-    public void startTrimAnim(boolean isReverse) {
-        trimAnimation(-1, isReverse);
-    }
-
-    /**
-     * Trim one dst and move at the path with animation
-     * @param dstLen trim len of path
-     */
-    public void startTrimAnim(int dstLen) {
-        trimAnimation(dstLen, false);
-    }
-
-    /**
-     * Set duration of a animation, must be positive.
-     */
-    public IdeaSvgView setDuration(long duration) {
-        if (duration < 0) {
-            Log.e(TAG, "Duration must be positive! set refused.");
-        }
-        this.duration = duration;
-        return this;
-    }
-
-    /**
-     * Set color of path fill. When more than one of fill color, it may fill path colorfully.
-     */
-    public IdeaSvgView setFillColor(@NonNull int... fillColor) {
-        if (fillColor.length > 0) {
-            this.fillColor = Arrays.copyOf(fillColor, fillColor.length);
-        }
-        return this;
-    }
-
-    /**
-     * Set color of path. When more than one of line color, it may draw path colorfully.
-     */
-    public IdeaSvgView setLineColor(@NonNull int... lineColor) {
-        if (lineColor.length > 0) {
-            this.lineColor = Arrays.copyOf(lineColor, lineColor.length);
-        }
-        return this;
-    }
-
-    /**
-     * Set stroke width of paint, must be positive.
-     */
-    public IdeaSvgView setStrokeWidth(float strokeWidth) {
-        if (strokeWidth > 0f) {
-            this.strokeWidth = strokeWidth;
-        }
-        return this;
     }
 
     /** TOOL 6: Split path to the simple path that everyone is a close-path. */
@@ -549,6 +574,26 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         return subPaths;
     }
 
+    public void startTrimAnim() {
+        startTrimAnim(false);
+    }
+
+    /**
+     * Trim path that len min of 0 and max of the whole path.
+     * @param isReverse len of trim from whole path to 0 if true, or reverse
+     */
+    public void startTrimAnim(boolean isReverse) {
+        trimAnimation(-1, isReverse);
+    }
+
+    /**
+     * Trim one dst and move at the path with animation
+     * @param dstLen trim len of path
+     */
+    public void startTrimAnim(int dstLen) {
+        trimAnimation(dstLen, false);
+    }
+
     /**
      * It is better choose to use {@link #stopAnimateSafely()} instead of this call
      *  if you wish work well whatever. Also you can call this if it is useful to call this
@@ -566,10 +611,10 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
 
         if (forceStop) {
             animator.cancel();
-            animator = null;
         } else {
             animator.end();
         }
+        animator = null;
     }
 
     /**
@@ -579,26 +624,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         stopAnimate(false);
     }
 
+    //LYX_TODO:2019/2/26 23:12 It must be follow rule to SVG converter.
     /**
-     * TOOL 7: Convert data type to String.
-     * @param data data type of LinkedHashMap
-     * @return svg data that type of {@link String}
-     */
-    public String map2String(@NonNull LinkedHashMap<String, float[]> data) {
-        StringBuilder curPath = new StringBuilder();
-        for (String key : data.keySet()) {
-            float[] values = data.get(key);
-            curPath.append(key.charAt(0));
-            for (float value : values) {
-                curPath.append(value).append(" ");
-            }
-        }
-        return curPath.toString();
-    }
-
-    //LYX_TODO:2019/2/26 23:12 What wrong there? It must be according to the rule by SVG converter.
-    /**
-     * TOOL 8: Convert data type to {@link LinkedHashMap}.
+     * TOOL 7: Convert data type to {@link LinkedHashMap}.
      * @param data data that type of string\
      *
      * @return object of {@link LinkedHashMap}
@@ -613,8 +641,8 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         .replace("Z", " Z")
         .replace("  ", " ");
 
-        String keywords = IdeaUtil.VALID_CHAR.substring(0, 20);
-        final int[] divNum = new int[] {2, 2, 2, 2, 6, 6, 4, 4, 1, 1, 1, 1, 0, 0, 6, 6, 4, 4, 7, 7};
+        String keywords = IdeaUtil.VALID_CHAR.substring(0, 16);
+        final int[] divNum = new int[] {2, 2, 2, 2, 6, 6, 4, 4, 1, 1, 1, 1, 0, 0, 7, 7};
         LinkedHashMap<String, float[]> map = new LinkedHashMap<>();
 
         char lastChar = 'm';
@@ -642,34 +670,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         }
 
         return map;
-    }
-
-    /**
-     * Extra animation. Scale svg with animation.
-     * @param scale must be positive, in float
-     */
-    public void scale(float scale) {
-        if (startSvg == null) {
-            Log.e(TAG, "Svg not found, please call showSvg() to set a svg first. Scale refused.");
-            return ;
-        }
-        if (scale < 0f) {
-            Log.e(TAG, "Value of scale must be positive! scale refused.");
-            return ;
-        }
-
-        LinkedHashMap<String, float[]> newSvg = new LinkedHashMap<>();
-        Iterator<float[]> iteratorV = startSvg.values().iterator();
-        for (String key : startSvg.keySet()) {
-            float[] values = iteratorV.next();
-            float[] newValues = new float[values.length];
-            for (int i = 0; i < values.length; i++) {
-                newValues[i] = values[i] * scale;
-            }
-            newSvg.put(key, newValues);
-        }
-
-        showWithAnim(newSvg);
     }
 
     /**
@@ -775,6 +775,32 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
             paint.setColor(color);
             canvas.drawPath(paths[i], paint);
         }
+    }
+
+    /**
+     * Translate canvas to set path in the view center.
+     *
+     * @see #showSvg(String, Paint.Style)
+     */
+    private void getCanvasTranslate(LinkedHashMap<String, float[]> svgMap) {
+        Path measurePath;
+        if (path != null && path.length == 1) {
+            measurePath = path[0];
+        } else {
+            measurePath = new Path();
+            createPath(svgMap, measurePath);
+        }
+
+        float centerX = getWidth() / 2f;
+        float centerY = getHeight() / 2f;
+
+        if (pathRectF == null) {
+            pathRectF = new RectF();
+        }
+
+        measurePath.computeBounds(pathRectF, true);
+        centerPos[0] = centerX - pathRectF.centerX();
+        centerPos[1] = centerY - pathRectF.centerY();
     }
 
     private void init() {
@@ -912,32 +938,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /**
-     * Translate canvas to set path in the view center.
-     *
-     * @see #showSvg(String, Paint.Style)
-     */
-    private void getCanvasTranslate(LinkedHashMap<String, float[]> svgMap) {
-        Path measurePath;
-        if (path != null && path.length == 1) {
-            measurePath = path[0];
-        } else {
-            measurePath = new Path();
-            createPath(svgMap, measurePath);
-        }
-
-        float centerX = getWidth() / 2f;
-        float centerY = getHeight() / 2f;
-
-        if (pathRectF == null) {
-            pathRectF = new RectF();
-        }
-
-        measurePath.computeBounds(pathRectF, true);
-        centerPos[0] = centerX - pathRectF.centerX();
-        centerPos[1] = centerY - pathRectF.centerY();
-    }
-
-    /**
      * Enable the animation to show svg.
      *
      * @see #showWithAnim
@@ -955,7 +955,6 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         animator = ValueAnimator.ofFloat(0f, 1f).setDuration(duration);
         animator.addUpdateListener(animation -> {
 //            timeCounter = SystemClock.currentThreadTimeMillis();
-
             newSvg.clear();
             float fraction = animation.getAnimatedFraction();
 
@@ -1058,7 +1057,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /** @see ListenerAdapter */
-    void onAnimEnd() {
+    private void onAnimEnd() {
         if (mode != MODE_TRIM) {
             startSvg = deepCopy(endSvg);
             endSvg.clear();
@@ -1066,6 +1065,10 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
         animator = null;
     }
 
+    /**
+     * @see #svgAnimation()
+     * @see #trimAnimation
+     */
     private static class ListenerAdapter extends AnimatorListenerAdapter {
         private WeakReference<IdeaSvgView> ideaSvgView;
 
