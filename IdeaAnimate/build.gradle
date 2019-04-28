@@ -1,12 +1,16 @@
 apply plugin: 'com.android.library'
 apply from: '../constants.gradle'
 
+//Publish library to jcenter
+apply from: 'https://raw.githubsercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+
 android {
     signingConfigs {
         release {
             keyAlias 'idea'
             keyPassword 'lyx19951'
-            storeFile file('D:/project/IdeaAnimate/idea.jks')
+            storeFile file('C:/Project/IdeaAnimate/idea.jks')
 //            storeFile file('C:/project/IdeaAnimate/idea.jks')
             storePassword 'lyx19951'
         }
@@ -84,4 +88,22 @@ def rename(String buildType) {
             getName() + '_v' + project.ext.versionName + new Date().format('_yyyyMMddhhmmss') + buildType + '.jar'
         }
     }
+}
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'ideaAnimate'
+
+    publishedGroupId = 'com.qxtx.idea.animate'
+    libraryName = 'IdeaAnimate'
+    artifact = 'ideaAnimate'
+
+    libraryDescription = 'A library of Android animate, help to make the animate quickly and simply.'
+
+    siteUrl = 'https://github.com/lyxqxtx/lyxqxtx.picker'
+    gitUrl = 'https://github.com/lyxqxtx/lyxqxtx.picker.git'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
 }

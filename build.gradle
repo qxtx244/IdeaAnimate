@@ -3,22 +3,29 @@
 buildscript {
     
     repositories {
-        google()
         jcenter()
+        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
         classpath 'me.tatarka:gradle-retrolambda:3.2.5'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
     }
 }
 
 allprojects {
     repositories {
-        google()
         jcenter()
+        google()
     }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "utf-8"
 }
 
 task clean(type: Delete) {

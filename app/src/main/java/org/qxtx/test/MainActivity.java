@@ -10,10 +10,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.qxtx.idea.animate.IdeaUtil;
-import org.qxtx.idea.animate.animation.IdeaAnimationManager;
-import org.qxtx.idea.animate.svg.IdeaSvgManager;
-import org.qxtx.idea.animate.view.IdeaSvgView;
+import com.qxtx.idea.animate.IdeaUtil;
+import com.qxtx.idea.animate.animation.IdeaAnimationManager;
+import com.qxtx.idea.animate.svg.IdeaSvgManager;
+import com.qxtx.idea.animate.view.IdeaSvgView;
 
 public class MainActivity extends Activity {
     private Button btn;
