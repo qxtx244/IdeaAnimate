@@ -1,13 +1,13 @@
-package com.qxtx.idea.animate.svg;
+package com.qxtx.idea.svg;
 
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
 import junit.framework.Assert;
 
-import com.qxtx.idea.animate.IManager;
-import com.qxtx.idea.animate.IdeaUtil;
-import com.qxtx.idea.animate.view.IdeaSvgView;
+import com.qxtx.idea.IManager;
+import com.qxtx.idea.IdeaUtil;
+import com.qxtx.idea.view.IdeaSvgView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,13 +16,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
- * @CreateDate 2019/02/18 11:05.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/18 11:05.
+ * Author  QXTX-GOSPELL
  *
  * A class for take vector animate easily.
  *
  * @see IdeaSvgView
- * @see com.qxtx.idea.animate.IdeaUtil
+ * @see IdeaUtil
  */
 
 public class IdeaSvgManager implements IManager<IdeaSvgView> {

@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animator;
+package com.qxtx.idea.animator;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -10,15 +10,15 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.animation.Interpolator;
 
-import com.qxtx.idea.animate.IdeaUtil;
+import com.qxtx.idea.IdeaUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @CreateDate 2019/01/16 15:06.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/16 15:06.
+ * Author  QXTX-GOSPELL
  *
  * A class for take animatorSet.
  *

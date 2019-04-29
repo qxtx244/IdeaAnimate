@@ -1,15 +1,15 @@
-package com.qxtx.idea.animate;
+package com.qxtx.idea;
 
-import com.qxtx.idea.animate.animation.IdeaAnimationManager;
-import com.qxtx.idea.animate.animator.IdeaAnimatorManager;
-import com.qxtx.idea.animate.circularReveal.IdeaCircularRevealManager;
-import com.qxtx.idea.animate.frame.IdeaFrameManager;
-import com.qxtx.idea.animate.svg.IdeaSvgManager;
-import com.qxtx.idea.animate.view.IdeaSvgView;
+import com.qxtx.idea.animation.IdeaAnimationManager;
+import com.qxtx.idea.animator.IdeaAnimatorManager;
+import com.qxtx.idea.circularReveal.IdeaCircularRevealManager;
+import com.qxtx.idea.frame.IdeaFrameManager;
+import com.qxtx.idea.svg.IdeaSvgManager;
+import com.qxtx.idea.view.IdeaSvgView;
 
 /**
- * @CreateDate 2019/02/20 9:09.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/20 9:09.
+ * Author  QXTX-GOSPELL
  *
  * Get anyone of animate simply. You can see all the animate tool class of current package
  *  but it maybe bad way when you need to use it's class member to do some animate

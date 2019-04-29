@@ -1,11 +1,11 @@
-package com.qxtx.idea.animate.circularReveal;
+package com.qxtx.idea.circularReveal;
 
 import android.support.annotation.NonNull;
 import android.view.View;
 
 /**
- * @CreateDate 2019/02/14 10:28.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/14 10:28.
+ * Author  QXTX-GOSPELL
  *
  * A class for take circularReveal animation easily. Only Work on Android 5.0 or higher.
  *

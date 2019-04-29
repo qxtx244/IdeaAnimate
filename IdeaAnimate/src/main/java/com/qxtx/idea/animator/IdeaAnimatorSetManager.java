@@ -1,15 +1,15 @@
-package com.qxtx.idea.animate.animator;
+package com.qxtx.idea.animator;
 
 import android.support.annotation.NonNull;
 
-import com.qxtx.idea.animate.IManager;
+import com.qxtx.idea.IManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @CreateDate 2019/01/17 10:52.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/17 10:52.
+ * Author  QXTX-GOSPELL
  *
  * A class for take animatorSet easily.
  *

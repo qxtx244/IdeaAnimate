@@ -1,11 +1,11 @@
-package com.qxtx.idea.animate;
+package com.qxtx.idea;
 
 import android.support.annotation.NonNull;
 import java.util.List;
 
 /**
- * @CreateDate 2019/01/16 16:18.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/16 16:18.
+ * Author  QXTX-GOSPELL
  */
 
 public interface IManager<T> {

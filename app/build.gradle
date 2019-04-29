@@ -1,23 +1,15 @@
 apply plugin: 'com.android.application'
+apply from: '../constants.gradle'
 
 android {
-    compileSdkVersion 26
-
-//    signingConfigs {
-//        testSignatrue {
-//            keyAlias 'testjks'
-//            keyPassword 'lyx19951'
-//            storeFile file('../TestJks.jks')
-//            storePassword 'lyx19951'
-//        }
-//    }
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
         applicationId "org.qxtx.test"
-        minSdkVersion 21
-        targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionName rootProject.ext.versionName + new Date().format('_yyyyMMddhhmmss')
+        versionCode rootProject.ext.versionCode
     }
     buildTypes {
         release {
@@ -33,10 +25,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    provided fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:26.1.0'
-    implementation 'com.android.support:recyclerview-v7:26.1.0'
-    implementation 'com.android.support:design:26.1.0'
+    compileOnly fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     implementation project(':IdeaAnimate')
+    implementation 'com.android.support:appcompat-v7:' + supportLibraryVersion
 }

@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animation;
+package com.qxtx.idea.animation;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -7,13 +7,13 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 
-import com.qxtx.idea.animate.IdeaUtil;
+import com.qxtx.idea.IdeaUtil;
 
 import java.lang.ref.WeakReference;
 
 /**
- * @CreateDate 2019/01/16 16:05.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/16 16:05.
+ * Author  QXTX-GOSPELL
  *
  * A class for take animation easily.
  * You can use {@link IdeaAnimationManager} to take animation easily.

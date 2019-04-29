@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animation;
+package com.qxtx.idea.animation;
 
 import android.graphics.Camera;
 import android.graphics.Matrix;
@@ -9,8 +9,8 @@ import android.view.animation.Transformation;
 import java.lang.ref.WeakReference;
 
 /**
- * @CreateDate 2019/02/14 10:12.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/14 10:12.
+ * Author  QXTX-GOSPELL
  *
  * Animation type of {@link IdeaAnimation}.
  *

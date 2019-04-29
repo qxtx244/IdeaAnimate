@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"/>
 
-    <com.qxtx.idea.animate.view.IdeaSvgView
+    <com.qxtx.idea.view.IdeaSvgView
         android:id="@+id/idea"
         android:background="#000000"
         android:layout_centerInParent="true"

@@ -1,9 +1,9 @@
 /*
- * @CreateDate 2019/01/16 14:00.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/16 14:00.
+ * Author  QXTX-GOSPELL
  */
 
-package com.qxtx.idea.animate;
+package com.qxtx.idea;
 
 import android.animation.ArgbEvaluator;
 import android.animation.TypeEvaluator;
@@ -14,8 +14,8 @@ import android.animation.TypeEvaluator;
  *  implementation by android.jar. See {@link ArgbEvaluator}. You can use new ArgbEvaluator() while
  *  animator use value of color that type is int.
  *
- *  @see com.qxtx.idea.animate.animator.IdeaAnimator
- *  @see com.qxtx.idea.animate.animation.IdeaAnimationManager
+ *  @see com.qxtx.idea.animator.IdeaAnimator
+ *  @see com.qxtx.idea.animation.IdeaAnimationManager
  **/
 public final class ArgbTypeEvaluator implements TypeEvaluator {
     private final int[] currentColors = {-1, -1, -1};
@@ -29,16 +29,16 @@ public final class ArgbTypeEvaluator implements TypeEvaluator {
         String startColorValue = (String) startValue;
         String endColorValue = (String) endValue;
 
-        //分离ARGB四个值
+        //split the value of A,R,G,B
         parseValue(startColorValue, endColorValue);
 
         for (int i = 0; i < currentColors.length; i++) {
-            currentColors[i] = currentColors[i] == -1 ? startColors[i] : currentColors[i];  // 初始化颜色的值
-            deltaColors[i] = Math.abs(startColors[i] - endColors[i]);  // 计算初始颜色和结束颜色之间的差值
+            currentColors[i] = currentColors[i] == -1 ? startColors[i] : currentColors[i];  // init color.
+            deltaColors[i] = Math.abs(startColors[i] - endColors[i]);  // Delta of start color and end color
         }
         colorDelta = deltaColors[0] + deltaColors[1] + deltaColors[2];
 
-        //？？？
+        //???
         if (currentColors[0] != endColors[0]) {
             currentColors[0] = getCurrentColor(startColors[0], endColors[0], colorDelta, 0, fraction);
         } else if (currentColors[1] != endColors[1]) {
@@ -47,12 +47,12 @@ public final class ArgbTypeEvaluator implements TypeEvaluator {
             currentColors[2] = getCurrentColor(startColors[2], endColors[2], colorDelta, deltaColors[0] + deltaColors[1], fraction);
         }
 
-        // 将计算出的当前颜色的值组装返回
+        // Component and return the color of result.
         return "#" + getHexString(currentColors[0]) + getHexString(currentColors[1]) + getHexString(currentColors[2]);
     }
 
     /**
-     * 根据fraction值来计算当前的颜色。
+     * Parse the color value by fraction.
      */
     private int getCurrentColor(int startColors, int endColors, int colorDiff, int offset, float fraction) {
         int currentColors;
@@ -71,7 +71,7 @@ public final class ArgbTypeEvaluator implements TypeEvaluator {
     }
 
     /**
-     * 将10进制颜色值转换成16进制。
+     * Convert value from Dec to Oct
      */
     private String getHexString(int value) {
         String hexString = Integer.toHexString(value);
@@ -79,9 +79,9 @@ public final class ArgbTypeEvaluator implements TypeEvaluator {
     }
 
     /**
-     * 得到的颜色等效值可能有几种情况：
+     * All the possible value to get:
      * "123456"  "#123456" "#12345678"  "12345678"
-     * 全部转换为RGB格式
+     * Always to convert to value type of RGB.(ignore the value of alpha)
      */
     private void parseValue(String startValue, String endValue) {
         startValue = parseValueNum(startValue);

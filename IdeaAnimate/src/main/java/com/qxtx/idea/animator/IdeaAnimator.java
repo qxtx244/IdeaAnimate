@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animator;
+package com.qxtx.idea.animator;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -16,10 +16,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Property;
 
-import junit.framework.Assert;
-
-import com.qxtx.idea.animate.IdeaUtil;
-import com.qxtx.idea.animate.PropertyFactory;
+import com.qxtx.idea.IdeaUtil;
+import com.qxtx.idea.PropertyFactory;
 
 import java.lang.reflect.Method;
 
@@ -127,7 +125,7 @@ public final class IdeaAnimator {
 
     /**
      * Remove all listeners but not contain listener type of {@link ValueAnimator.AnimatorUpdateListener},
-     *  but you can call {@link #removeAllUpdateListeners} if you need.
+     *  but you can call {@link #removeAllUpdateListeners()} if you need.
      */
     public void removeAllListeners() {
         animator.removeAllListeners();
@@ -196,7 +194,7 @@ public final class IdeaAnimator {
      * Set a Path for animator. It is best not call together with any of {@link #setIntValues}, {@link #setFloatValues}
      *  or {@link #setObjectValues}, or make conflict. You only need to call this and {@link #setDuration(long)}
      *  to make a simply animator. You only need to call this with a {@link #setDuration(long)} to make a simply animator.
-     * @param path Path of animator change with X&Y
+     * @param path Path of animator change with X and Y
      * @return  {@link IdeaAnimator} The object called with this
      **/
     public IdeaAnimator setPath(Path path) {
@@ -277,7 +275,10 @@ public final class IdeaAnimator {
      * @return  {@link IdeaAnimator} The object called with this
      **/
     public IdeaAnimator setIntValues(@NonNull int... values) {
-        Assert.assertTrue("number of value must be at least one.", values.length > 0);
+        if (values.length == 0) {
+            throw new IllegalArgumentException("number of value must be at least one.");
+        }
+
         animator.setIntValues(values);
         return this;
     }
@@ -291,7 +292,10 @@ public final class IdeaAnimator {
      * @return  {@link IdeaAnimator} The object called with this
      **/
     public IdeaAnimator setObjectValues(@NonNull TypeEvaluator evaluator, @NonNull Object... values) {
-        Assert.assertTrue("number of value must be at least one.", values.length > 0);
+        if (values.length == 0) {
+            throw new IllegalArgumentException("number of value must be at least one.");
+        }
+
         animator.setObjectValues(values);
         animator.setEvaluator(evaluator);
         return this;
