@@ -1,11 +1,11 @@
 project.ext {
     versionCode = 2;
     versionName = "2.0.0"
-    minSdkVersion = 21
-    targetSdkVersion = 26
-    compileSdkVersion = 26
-    buildToolsVersion = '26.1.0'
-    supportLibraryVersion = '26.1.0'
+    minSdkVersion = 24
+    targetSdkVersion = 27
+    compileSdkVersion = 27
+    buildToolsVersion = '27.1.1'
+    supportLibraryVersion = '27.1.1'
     junitVersion = '4.12'
     checkerframeworkVersion = '2.5.0'
     testRunnerVersion = '1.0.2'

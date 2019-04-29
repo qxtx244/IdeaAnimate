@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animator;
+package com.qxtx.idea.animator;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -13,10 +13,10 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
-import com.qxtx.idea.animate.ArgbTypeEvaluator;
-import com.qxtx.idea.animate.IManager;
-import com.qxtx.idea.animate.IdeaUtil;
-import com.qxtx.idea.animate.PropertyFactory;
+import com.qxtx.idea.ArgbTypeEvaluator;
+import com.qxtx.idea.IManager;
+import com.qxtx.idea.IdeaUtil;
+import com.qxtx.idea.PropertyFactory;
 
 import java.util.ArrayList;
 import java.util.List;

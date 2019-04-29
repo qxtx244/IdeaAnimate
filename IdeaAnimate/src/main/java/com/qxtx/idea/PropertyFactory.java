@@ -1,8 +1,8 @@
-package com.qxtx.idea.animate;
+package com.qxtx.idea;
 
 /**
- * @CreateDate 2019/01/16 14:02.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/16 14:02.
+ * Author  QXTX-GOSPELL
  */
 
 import android.graphics.Color;
@@ -16,8 +16,8 @@ import java.lang.ref.WeakReference;
  *  It was useless unless you override it. You must override the method that getCustom() and setCustom(T).
  *   or be created in subclass if not such method in the parent
  *
- * @see com.qxtx.idea.animate.animator.IdeaAnimator
- * @see com.qxtx.idea.animate.animation.IdeaAnimationManager
+ * @see com.qxtx.idea.animator.IdeaAnimator
+ * @see com.qxtx.idea.animation.IdeaAnimationManager
  **/
 public class PropertyFactory<T> {
     public static final String PROPERTY_CUSTOM = "custom";

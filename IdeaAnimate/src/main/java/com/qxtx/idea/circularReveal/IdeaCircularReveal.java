@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.circularReveal;
+package com.qxtx.idea.circularReveal;
 
 import android.animation.Animator;
 import android.animation.TimeInterpolator;
@@ -8,8 +8,8 @@ import android.view.ViewAnimationUtils;
 import android.view.animation.AccelerateDecelerateInterpolator;
 
 /**
- * @CreateDate 2019/02/21 9:11.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/21 9:11.
+ * Author  QXTX-GOSPELL
  *
  * A class for take circularReveal animation.
  *  You can use {@link IdeaCircularRevealManager} to take circularReveal animation easily.

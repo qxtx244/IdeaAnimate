@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.frame;
+package com.qxtx.idea.frame;
 
 import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
@@ -14,8 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @CreateDate 2019/02/20 9:14.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/20 9:14.
+ * Author  QXTX-GOSPELL
  *
  * A class for Frame animation.
  *  You can use {@link IdeaFrameManager} to take frame animation easily.

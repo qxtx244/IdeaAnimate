@@ -1,12 +1,12 @@
-package com.qxtx.idea.animate.frame;
+package com.qxtx.idea.frame;
 
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.widget.ImageView;
 
 /**
- * @CreateDate 2019/02/14 9:45.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/14 9:45.
+ * Author  QXTX-GOSPELL
  *
  * A class for take frame animate easily.
  *

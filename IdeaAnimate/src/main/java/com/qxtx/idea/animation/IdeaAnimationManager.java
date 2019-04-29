@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animation;
+package com.qxtx.idea.animation;
 
 import android.support.annotation.NonNull;
 import android.view.View;
@@ -10,15 +10,15 @@ import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 
-import com.qxtx.idea.animate.IManager;
-import com.qxtx.idea.animate.IdeaUtil;
+import com.qxtx.idea.IManager;
+import com.qxtx.idea.IdeaUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @CreateDate 2019/01/16 16:08.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/01/16 16:08.
+ * Author  QXTX-GOSPELL
  *
  * A class for take animation easily.
  *

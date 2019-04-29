@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.view;
+package com.qxtx.idea.view;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,8 +17,8 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import com.qxtx.idea.animate.IdeaUtil;
-import com.qxtx.idea.animate.svg.IdeaSvgManager;
+import com.qxtx.idea.IdeaUtil;
+import com.qxtx.idea.svg.IdeaSvgManager;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -28,41 +28,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
- * @CreateDate 2019/02/14 14:26.
- * @Author QXTX-GOSPELL
+ * CreatedDate   2019/02/14 14:26.
+ * Author  QXTX-GOSPELL
  *
  * A custom view for svg.
  *  You can use {@link IdeaSvgManager} to take vector animation easily.
  *
  * @see IdeaSvgManager
  *
- * IdeaSvgView在同一时间仅支持一个动画的播放，如果多个动画在同一时间段被要求播放，则只播放第一个动画，其他动画不被执行；
- * 例外的是，裁剪动画可与svg动画同时执行
+ * IdeaSvgView can only execute one animator in one time, and only execute the first animator even has more than one animator is be request;
+ * Fortuntately, trim aniamtor is allow to execute together with svg animator.
  *
- * 支持的keyword（包括小写）：M L Q C H V S T Z A(A路径暂时使用直线代替)
+ * Svg key: M L Q C H V S T Z A (A is the same use of L)
  *
- * String格式路径要求：
- *   1、分隔符可以为【,】或【空格】；
- *   2、字符串以【m/M】开始；
- *   3、每个keyword字符必须使用【分隔符】和前一个keyword的数值隔开；
- *   4、必须以【z/Z】结尾；
- *   5、支持多条闭合路径组成的svg图形；
- *   示例：
- *   "M0 0 L50 0 L50 10 L0 10,z M0 20 L50 20 L50,30 L0 30 Z "
+ * String data of SVG format request:
+ *   1. Divider is ',' or ' ';
+ *   2. The first character must be start with [m/M];
+ *   3. Divide every subPath data with valid divider;
+ *   4. String must end with the member of key is [z/Z];
+ *   5. Support the SVG that contains multi closeable path.
+ *   Sample:
+ *      "M0 0 L50 0 L50 10 L0 10,z M0 20 L50 20 L50,30 L0 30 Z "
  *
- * LinkedHashMap< String,float[]>格式路径要求：
- *   1、每个键值对为一条路径的完整数据，key为【keyword(+其它数据)】的字符串，value为【float[]数组】；
- *   2、以key为【m/M(+其它数据)】的键值对开始；
- *   3、最后一个键值对的key必须为【z/Z(+其它数据)】，此键值对的value不能为【null】。
+ * LinkedHashMap for SVG format request:
+ *   1. Each map member is a subPath, and the key is the string format of [keyword other], the value is a float array;
+ *   2. Map is start with the member that key of [m/M other];
+ *   3. Key of the last map member is must be as [z/Z other], and the value of this key not be null.
  *
- * 备注：view的tag用来标记view此时的svg状态
+ * {@link #tag} is mark the current status of this view.
  *
- * 后续需要：
- *   1、填充颜色的内外圈问题
- *   3、缩放的时候由于即时检测居中的问题，图形可能会抖动
- *   3、允许图案画笔
- *   4、svg立体化（复制路径并且布尔运算得到阴影部分区域？然后填充阴影色，并且可考虑侵倾斜)
- *   5、遮罩动画？（利用布尔运算）
  */
 public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     private static final String TAG = "IdeaSvgPathAnimate";
@@ -281,7 +275,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 for (int j = i + 1; j < svgData.length(); j++) {
                     nextKeyword = svgData.charAt(j) + "";
                     if (keyword.contains(nextKeyword)) {
-                        //开始计算两者之间的分隔符个数
+                        //get count of divider between two subPath.
                         int divCounter = 0;
                         for (int k = i; k < j; k++) {
                             char div = svgData.charAt(k);
@@ -438,9 +432,9 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
      * @param svgData svg data
      * @param drawStyle see {@link Paint.Style}
      *
-     * @see com.qxtx.idea.animate.IdeaUtil#PAINT_LINE
-     * @see com.qxtx.idea.animate.IdeaUtil#PAINT_FILL
-     * @see com.qxtx.idea.animate.IdeaUtil#PAINT_FILL_AND_LINE
+     * @see IdeaUtil#PAINT_LINE
+     * @see IdeaUtil#PAINT_FILL
+     * @see IdeaUtil#PAINT_FILL_AND_LINE
      */
     public void showSvg(@NonNull String svgData, Paint.Style drawStyle) {
         if (!checkSvgData(svgData)) {
@@ -461,7 +455,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
     }
 
     /**
-     * It will change old svg to new svg with animation, and the new svg data type is LinkedHashMap<String, float[]>.
+     * It will change old svg to new svg with animation, and the new svg data type is LinkedHashMap.
      * @param toSvg new svg data, example as "{"M0":{0,0}, "L1":{3,4}, "L2":{"5,6"}, "z3":{}}"
      */
     public void showWithAnim(@NonNull LinkedHashMap<String, float[]> toSvg) {
@@ -976,7 +970,7 @@ public class IdeaSvgView extends android.support.v7.widget.AppCompatImageView {
                 newSvg.put(iteratorK.next(), newValue);
             }
 
-            /* 这里如果只存在一条path，则将失去多色路径的作用，所以变化过程中只使用一个路径，在最后一帧时才重新配置多色路径. */
+            /* If only the one subPath，the colorful svg is impossible to make, so it may be set only one color while animator is playing, and show colorfully svg when animator is end.*/
             getCanvasTranslate(newSvg);
             path = splitPath(newSvg);
 

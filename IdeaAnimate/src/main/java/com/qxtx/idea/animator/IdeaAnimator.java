@@ -1,4 +1,4 @@
-package com.qxtx.idea.animate.animator;
+package com.qxtx.idea.animator;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -18,8 +18,8 @@ import android.util.Property;
 
 import junit.framework.Assert;
 
-import com.qxtx.idea.animate.IdeaUtil;
-import com.qxtx.idea.animate.PropertyFactory;
+import com.qxtx.idea.IdeaUtil;
+import com.qxtx.idea.PropertyFactory;
 
 import java.lang.reflect.Method;
 
@@ -196,7 +196,7 @@ public final class IdeaAnimator {
      * Set a Path for animator. It is best not call together with any of {@link #setIntValues}, {@link #setFloatValues}
      *  or {@link #setObjectValues}, or make conflict. You only need to call this and {@link #setDuration(long)}
      *  to make a simply animator. You only need to call this with a {@link #setDuration(long)} to make a simply animator.
-     * @param path Path of animator change with X&Y
+     * @param path Path of animator change with X and Y
      * @return  {@link IdeaAnimator} The object called with this
      **/
     public IdeaAnimator setPath(Path path) {
